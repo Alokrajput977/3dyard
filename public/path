@@ -1,0 +1,539 @@
+const WAREHOUSE_DATA = [
+  {
+    id: "Warehouse 1",
+    polygon: [
+      [28.51143341203824, 77.29014792543707],
+      [28.511447553531475, 77.29061060646951],
+      [28.50887469321554, 77.29073212892841],
+      [28.50886142486985, 77.29025147014725],
+      [28.51143341203824, 77.29014792543707] 
+    ]
+  },
+  {
+    id: "Warehouse 2",
+    polygon: [
+      [28.51112807640633, 77.28930776832516],
+      [28.51114576715341, 77.2897859105682],
+      [28.50960493713407, 77.28986465016293],
+      [28.509580039693272, 77.28937354130709],
+      [28.51112807640633, 77.28930776832516] 
+    ]
+  },
+  {
+    id: "Warehouse 3",
+    polygon: [
+      [28.50948198269312, 77.29158820098095],
+      [28.509540076766502, 77.2919518104223],
+      [28.508237102003246, 77.29219264264968],
+      [28.508187306470095, 77.29182903320833],
+      [28.50948198269312, 77.29158820098095] 
+    ]
+  },
+  {
+    id: "Warehouse 4",
+    polygon: [
+      [28.516129077394567, 77.28667217921567],
+      [28.51617385678954, 77.28779736584238],
+      [28.51584625972401, 77.28780541246903],
+      [28.515805015417023, 77.28667754363342],
+      [28.516129077394567, 77.28667217921567] 
+    ]
+  }
+];
+
+// --- 4-Line Railway Track Coordinates ---
+const TRACK_COORDS = [
+  [28.50798029741757, 77.2861993278382],
+  [28.511441251081667, 77.28608144845934],
+  [28.513226522607233, 77.28598437130985],
+  [28.514676652635337, 77.28588036009819],
+  [28.516528890591463, 77.28581795337986], 
+  [28.517899769428844, 77.28680259289459],  
+  [28.519014737755104, 77.28747519872812],
+  [28.52097656595973, 77.28848757455816],
+  [28.5227129362258, 77.28815473873708],
+  [28.520793788465724, 77.28893135584076],
+  [28.51889897656675, 77.28863319036364],
+  [28.516778696540648, 77.28838356336682]
+];
+
+
+
+
+
+
+// App.jsx
+import React, { useEffect, useState, useMemo } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import { MapControls, Html } from "@react-three/drei";
+import * as THREE from "three";
+import "./App.css";
+
+const LAT_TO_METERS = 111320;
+
+// --- 4 Warehouses ---
+const WAREHOUSE_DATA = [
+  {
+    id: "Warehouse 1",
+    polygon: [
+      [28.51143341203824, 77.29014792543707],
+      [28.511447553531475, 77.29061060646951],
+      [28.50887469321554, 77.29073212892841],
+      [28.50886142486985, 77.29025147014725],
+      [28.51143341203824, 77.29014792543707] 
+    ]
+  },
+  {
+    id: "Warehouse 2",
+    polygon: [
+      [28.51112807640633, 77.28930776832516],
+      [28.51114576715341, 77.2897859105682],
+      [28.50960493713407, 77.28986465016293],
+      [28.509580039693272, 77.28937354130709],
+      [28.51112807640633, 77.28930776832516] 
+    ]
+  },
+  {
+    id: "Warehouse 3",
+    polygon: [
+      [28.50948198269312, 77.29158820098095],
+      [28.509540076766502, 77.2919518104223],
+      [28.508237102003246, 77.29219264264968],
+      [28.508187306470095, 77.29182903320833],
+      [28.50948198269312, 77.29158820098095] 
+    ]
+  },
+  {
+    id: "Warehouse 4",
+    polygon: [
+      [28.516129077394567, 77.28667217921567],
+      [28.51617385678954, 77.28779736584238],
+      [28.51584625972401, 77.28780541246903],
+      [28.515805015417023, 77.28667754363342],
+      [28.516129077394567, 77.28667217921567] 
+    ]
+  }
+];
+
+// --- 4-Line Railway Track Coordinates ---
+const TRACK_COORDS = [
+  [28.50798029741757, 77.2861993278382],
+  [28.511441251081667, 77.28608144845934],
+  [28.513226522607233, 77.28598437130985],
+  [28.514676652635337, 77.28588036009819],
+  [28.516528890591463, 77.28581795337986], 
+  [28.517899769428844, 77.28680259289459],  
+  [28.519014737755104, 77.28747519872812],
+  [28.52097656595973, 77.28848757455816],
+  [28.5227129362258, 77.28815473873708],
+  [28.520793788465724, 77.28893135584076],
+  [28.51889897656675, 77.28863319036364],
+  [28.516778696540648, 77.28838356336682]
+];
+
+// --- Helper Functions ---
+function calculateCenter(slots, warehouses) {
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  slots.forEach(slot => { slot.polygon.forEach(([lat, lng]) => { minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat); minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng); }); });
+  warehouses.forEach(wh => { wh.polygon.forEach(([lat, lng]) => { minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat); minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng); }); });
+  if (minLat === Infinity) return { lat: 28.510, lng: 77.290 };
+  return { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
+}
+
+const CameraZoomHandler = ({ zoomAction, setZoomAction }) => {
+  const { camera, controls } = useThree();
+  useEffect(() => {
+    if (zoomAction && controls) {
+      const direction = new THREE.Vector3().subVectors(camera.position, controls.target);
+      const zoomFactor = zoomAction === 'in' ? 0.7 : 1.4;
+      camera.position.copy(controls.target).add(direction.multiplyScalar(zoomFactor));
+      controls.update();
+      setZoomAction(null);
+    }
+  }, [zoomAction, camera, controls, setZoomAction]);
+  return null;
+};
+
+// --- FIX: Completely Rebuilt Track Segment Component ---
+// This uses pure boxes to guarantee the track lies flat and never turns into a wall.
+const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
+  const trackCenters = [-6, -2, 2, 6]; 
+  const gaugeHalf = 1.676 / 2; 
+  const railW = 0.15; 
+  
+  // Calculate how many electric poles fit in this segment (every 40 meters)
+  const poleSpacing = 40;
+  const numPoles = Math.floor(len / poleSpacing);
+  const poles = [];
+  for (let k = 0; k <= numPoles; k++) {
+    poles.push(-len / 2 + (k * poleSpacing));
+  }
+
+  // Signal Colors (Green, Red, Green, Red)
+  const signalColors = [true, false, true, false]; 
+
+  return (
+    <group position={[cx, 0.05, cz]} rotation={[0, angle, 0]}>
+      
+      {/* 1. Flat Concrete Bed (Width: 20, Height: 0.4, Depth: len) */}
+      <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[20, 0.4, len]} />
+        <meshStandardMaterial color={isDark ? "#3F3F46" : "#D4D4D8"} roughness={0.9} />
+      </mesh>
+
+      {/* 2. Steel Rails & Overhead Wires (Lying side-by-side, NEVER stacked) */}
+      {trackCenters.map((tc, idx) => (
+        <group key={`track-lines-${idx}`}>
+          {/* Left Rail */}
+          <mesh position={[tc - gaugeHalf, 0.5, 0]} castShadow receiveShadow>
+            <boxGeometry args={[railW, 0.2, len]} />
+            <meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Right Rail */}
+          <mesh position={[tc + gaugeHalf, 0.5, 0]} castShadow receiveShadow>
+            <boxGeometry args={[railW, 0.2, len]} />
+            <meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Overhead Wire */}
+          <mesh position={[tc, 9.5, 0]}>
+            <boxGeometry args={[0.05, 0.05, len]} />
+            <meshStandardMaterial color="#1F2937" metalness={0.9} roughness={0.1} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* 3. Electric Poles - LEFT SIDE ONLY (Cantilever Design) */}
+      {poles.map((zOffset, i) => (
+        <group key={`pole-${i}`} position={[0, 0, zOffset]}>
+          
+          {/* Left Mast Pillar ONLY */}
+          <mesh position={[-9.5, 5, 0]} castShadow>
+             <boxGeometry args={[0.4, 10, 0.4]} />
+             <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.5} />
+          </mesh>
+          
+          {/* Crossbeam hanging over the tracks to the right */}
+          <mesh position={[-0.5, 9.5, 0]} castShadow>
+             <boxGeometry args={[18.4, 0.3, 0.4]} />
+             <meshStandardMaterial color="#334155" metalness={0.7} />
+          </mesh>
+
+          {/* 4 Signals hanging down directly over each track */}
+          {trackCenters.map((trackCenter, idx) => (
+            <group key={`signal-${idx}`} position={[trackCenter, 8.5, 0.2]}>
+               {/* Dark Signal Box */}
+               <mesh castShadow>
+                   <boxGeometry args={[0.7, 1.4, 0.5]} />
+                   <meshStandardMaterial color="#111827" />
+               </mesh>
+               {/* Glowing Light */}
+               <mesh position={[0, 0, 0.26]}>
+                   <circleGeometry args={[0.25, 16]} />
+                   <meshStandardMaterial 
+                      color={signalColors[idx] ? "#10B981" : "#EF4444"} 
+                      emissive={signalColors[idx] ? "#10B981" : "#EF4444"} 
+                      emissiveIntensity={3} 
+                   />
+               </mesh>
+            </group>
+          ))}
+        </group>
+      ))}
+
+    </group>
+  );
+};
+
+// --- Railway Generator ---
+const RailwayTrack3D = ({ path, center, isDark }) => {
+  const segments = useMemo(() => {
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+    const pts = path.map(coord => {
+      const x = (coord[1] - center.lng) * LAT_TO_METERS * lngScale;
+      const z = -(coord[0] - center.lat) * LAT_TO_METERS; 
+      return { x, z };
+    });
+
+    const segs = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const dx = p2.x - p1.x;
+      const dz = p2.z - p1.z;
+      const len = Math.sqrt(dx * dx + dz * dz);
+      const cx = (p1.x + p2.x) / 2;
+      const cz = (p1.z + p2.z) / 2;
+      const angle = Math.atan2(dx, dz); 
+      segs.push({ cx, cz, len, angle });
+    }
+    return segs;
+  }, [path, center]);
+
+  return (
+    <group>
+      {segments.map((seg, idx) => (
+        <TrackSegment key={`track-seg-${idx}`} {...seg} isDark={isDark} />
+      ))}
+    </group>
+  );
+};
+
+// --- Wall Decorations for Warehouses ---
+const WallDecorations = ({ segment }) => {
+  const { midX, midZ, nx, nz, len } = segment;
+  const rotationY = Math.atan2(nx, nz); 
+  const yRotation = [0, rotationY, 0];
+  const depthOffset = 0.15;
+  const pos = [midX + nx * depthOffset, 0, midZ + nz * depthOffset];
+
+  const shutterColor = "#9CA3AF"; 
+  const windowColor = "#1F2937";  
+  const bollardColor = "#EAB308"; 
+
+  const renderShutter = (offsetX) => (
+    <group position={[offsetX, 4, 0]} key={`shutter-${offsetX}`}>
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[4, 8, 0.1]} />
+        <meshStandardMaterial color={shutterColor} roughness={0.6} metalness={0.5} />
+      </mesh>
+      <mesh position={[-1, 1.5, 0.06]}><boxGeometry args={[1, 0.5, 0.05]} /><meshStandardMaterial color={windowColor} /></mesh>
+      <mesh position={[1, 1.5, 0.06]}><boxGeometry args={[1, 0.5, 0.05]} /><meshStandardMaterial color={windowColor} /></mesh>
+      <mesh position={[-2.5, -3.25, 0.5]} castShadow><cylinderGeometry args={[0.15, 0.15, 1.5, 12]} /><meshStandardMaterial color={bollardColor} roughness={0.4} /></mesh>
+      <mesh position={[2.5, -3.25, 0.5]} castShadow><cylinderGeometry args={[0.15, 0.15, 1.5, 12]} /><meshStandardMaterial color={bollardColor} roughness={0.4} /></mesh>
+    </group>
+  );
+
+  const renderDoor = (offsetX) => (
+    <mesh position={[offsetX, 2.5, 0]} key={`door-${offsetX}`} castShadow>
+      <boxGeometry args={[2, 5, 0.1]} />
+      <meshStandardMaterial color="#4B5563" roughness={0.8} />
+    </mesh>
+  );
+
+  const renderWindow = (offsetX) => (
+    <group position={[offsetX, 5, 0]} key={`window-${offsetX}`}>
+      <mesh><boxGeometry args={[2.5, 1.5, 0.12]} /><meshStandardMaterial color="#374151" /></mesh>
+      <mesh position={[0, 0, 0.02]}><boxGeometry args={[2.3, 1.3, 0.1]} /><meshStandardMaterial color={windowColor} metalness={0.8} roughness={0.2} /></mesh>
+    </group>
+  );
+
+  return (
+    <group position={pos} rotation={yRotation}>
+      {len > 18 && (<>{renderShutter(-3.5)}{renderShutter(3.5)}</>)}
+      {len > 10 && len <= 18 && (<>{renderShutter(-2)}{renderDoor(3)}</>)}
+      {len > 5 && len <= 10 && (<>{renderWindow(0)}</>)}
+    </group>
+  );
+};
+
+// --- Warehouse Component ---
+const Warehouse3D = ({ data, center, isDark }) => {
+  const [hovered, setHovered] = useState(false);
+  const WAREHOUSE_HEIGHT = 10; 
+
+  const { shape, wallSegments } = useMemo(() => {
+    const s = new THREE.Shape();
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+    const points2D = [];
+    
+    data.polygon.forEach((coord, i) => {
+      const [lat, lng] = coord;
+      const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
+      const y = (lat - center.lat) * LAT_TO_METERS; 
+      if (i === 0) s.moveTo(x, y); else s.lineTo(x, y);
+      points2D.push({ wx: x, wz: -y }); 
+    });
+
+    let cx = 0, cz = 0;
+    points2D.forEach(p => { cx += p.wx; cz += p.wz; });
+    cx /= points2D.length; cz /= points2D.length;
+
+    const segments = [];
+    for (let i = 0; i < points2D.length - 1; i++) {
+      const p1 = points2D[i];
+      const p2 = points2D[i + 1];
+      const dx = p2.wx - p1.wx;
+      const dz = p2.wz - p1.wz;
+      const len = Math.sqrt(dx * dx + dz * dz);
+      const midX = (p1.wx + p2.wx) / 2;
+      const midZ = (p1.wz + p2.wz) / 2;
+      
+      let nx = dz / len; let nz = -dx / len;
+      if (nx * (midX - cx) + nz * (midZ - cz) < 0) { nx = -nx; nz = -nz; }
+      segments.push({ midX, midZ, nx, nz, len });
+    }
+    return { shape: s, wallSegments: segments };
+  }, [data, center]);
+
+  const extrudeSettings = { depth: WAREHOUSE_HEIGHT, bevelEnabled: false };
+  const wallColor = isDark ? "#64748B" : "#F1F5F9"; 
+  const roofColor = isDark ? "#475569" : "#94A3B8"; 
+  const hoverColor = isDark ? "#94A3B8" : "#E2E8F0";    
+
+  return (
+    <group>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, 0.05, 0]}
+        castShadow
+        receiveShadow
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+      >
+        <extrudeGeometry args={[shape, extrudeSettings]} />
+        <meshStandardMaterial attach="material-0" color={hovered ? hoverColor : roofColor} roughness={0.7} metalness={0.3} />
+        <meshStandardMaterial attach="material-1" color={hovered ? hoverColor : wallColor} roughness={0.9} />
+      </mesh>
+      {wallSegments.map((segment, idx) => (
+        <WallDecorations key={`wall-detail-${idx}`} segment={segment} />
+      ))}
+      {hovered && (
+        <Html position={[0, WAREHOUSE_HEIGHT + 5, 0]} center style={{ pointerEvents: "none" }}>
+          <div className={`tooltip-3d ${isDark ? 'dark' : 'light'}`}>{data.id}</div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
+// --- Flat Path Component ---
+const Slot3D = ({ slot, center, isDark, onClick }) => {
+  const [hovered, setHovered] = useState(false);
+
+  const shape = useMemo(() => {
+    const s = new THREE.Shape();
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+
+    slot.polygon.forEach((coord, i) => {
+      const [lat, lng] = coord;
+      const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
+      const z = (lat - center.lat) * LAT_TO_METERS; 
+      if (i === 0) s.moveTo(x, z); else s.lineTo(x, z);
+    });
+    return s;
+  }, [slot, center]);
+
+  const extrudeSettings = { depth: 1, bevelEnabled: false };
+  const baseColor = isDark ? "#374151" : "#E5E7EB"; 
+  const hoverColor = isDark ? "#4B5563" : "#F3F4F6";
+
+  return (
+    <group>
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, 0.01, 0]} 
+        receiveShadow
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = 'pointer'; }}
+        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = 'auto'; }}
+        onClick={(e) => { e.stopPropagation(); onClick(slot); }}
+      >
+        <extrudeGeometry args={[shape, extrudeSettings]} />
+        <meshStandardMaterial color={hovered ? hoverColor : baseColor} roughness={0.9} />
+      </mesh>
+    </group>
+  );
+};
+
+// --- Main App ---
+function App() {
+  const [slots, setSlots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [center, setCenter] = useState({ lat: 28.510, lng: 77.290 });
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [zoomAction, setZoomAction] = useState(null);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    fetch("/slots.json")
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then((data) => {
+        const validSlots = data.filter(item => item.polygon && item.polygon.length >= 3);
+        setSlots(validSlots);
+        setCenter(calculateCenter(validSlots, WAREHOUSE_DATA));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.warn("slots.json not found, loading Warehouses independently.", err);
+        setCenter(calculateCenter([], WAREHOUSE_DATA));
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className={`screen-message ${isDark ? 'dark' : 'light'}`}>Loading 3D Logistics Engine...</div>;
+
+  return (
+    <div className={`app-container ${isDark ? 'theme-dark' : 'theme-light'}`}>
+      
+      {/* UI Overlay */}
+      <div className="ui-overlay">
+        <div className="ui-header">
+          <h1>Logistics 3D Yard</h1>
+          <p className="subtitle">{slots.length} Yard Slots | {WAREHOUSE_DATA.length} Warehouses</p>
+        </div>
+
+        <div className="ui-controls-group">
+          <button className="theme-toggle" onClick={() => setIsDark(!isDark)} title="Toggle Theme">
+            {isDark ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          </button>
+          <div className="ui-zoom-controls">
+            <button onClick={() => setZoomAction('in')} title="Zoom In">+</button>
+            <button onClick={() => setZoomAction('out')} title="Zoom Out">−</button>
+          </div>
+        </div>
+
+        {selectedSlot && (
+          <div className="ui-info-card fade-in" style={{ background: isDark ? 'rgba(30,41,59,0.9)' : 'rgba(255,255,255,0.9)', padding: '15px', borderRadius: '8px', marginTop: '10px' }}>
+            <div className="card-header" style={{ fontSize: '12px', opacity: 0.7 }}>Selected Yard Slot</div>
+            <h3 style={{ margin: '5px 0' }}>{selectedSlot.id}</h3>
+            <div className="card-detail" style={{ fontSize: '14px' }}>
+              <span>Vertices:</span> <strong>{selectedSlot.polygon.length}</strong>
+            </div>
+          </div>
+        )}
+
+        <div className="ui-legend" style={{ background: isDark ? 'rgba(30,41,59,0.8)' : 'rgba(255,255,255,0.8)', padding: '15px', borderRadius: '8px', position: 'absolute', bottom: '20px', left: '20px' }}>
+          <h4 style={{ margin: '0 0 10px 0' }}>Map Legend</h4>
+          <div className="legend-row" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}><div style={{ width: '15px', height: '15px', background: isDark ? '#94A3B8' : '#E2E8F0', border: '1px solid #94A3B8', marginRight: '10px' }}></div><span>Industrial Warehouse</span></div>
+          <div className="legend-row" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}><div style={{ width: '15px', height: '15px', background: isDark ? '#10B981' : '#10B981', marginRight: '10px' }}></div><span>Flat Railway Track</span></div>
+          <div className="legend-row" style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}><div style={{ width: '15px', height: '15px', background: isDark ? '#374151' : '#D1D5DB', marginRight: '10px' }}></div><span>Yard Area</span></div>
+        </div>
+      </div>
+
+      {/* 3D Scene */}
+      <Canvas camera={{ position: [0, 400, 400], fov: 45 }} shadows>
+        <color attach="background" args={[isDark ? "#0f172a" : "#e2e8f0"]} />
+        <CameraZoomHandler zoomAction={zoomAction} setZoomAction={setZoomAction} />
+
+        <ambientLight intensity={isDark ? 0.3 : 0.6} />
+        <directionalLight position={[100, 300, 100]} intensity={isDark ? 0.7 : 1.2} castShadow shadow-mapSize={[2048, 2048]} />
+        <directionalLight position={[-100, 100, -100]} intensity={isDark ? 0.2 : 0.4} />
+
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
+          <planeGeometry args={[10000, 10000]} />
+          <meshStandardMaterial color={isDark ? "#1e293b" : "#ffffff"} roughness={1} />
+        </mesh>
+
+        <MapControls enableDamping={true} dampingFactor={0.05} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={20} maxDistance={1500} />
+
+        {/* 1. Flat Paths */}
+        {slots.map((slot, idx) => (
+          <Slot3D key={`slot-${idx}`} slot={slot} center={center} isDark={isDark} onClick={setSelectedSlot} />
+        ))}
+
+        {/* 2. Warehouses */}
+        {WAREHOUSE_DATA.map((wh, idx) => (
+          <Warehouse3D key={`wh-${idx}`} data={wh} center={center} isDark={isDark} />
+        ))}
+
+        {/* 3. NEW Segment-Based Flat Railway Track */}
+        <RailwayTrack3D path={TRACK_COORDS} center={center} isDark={isDark} />
+
+      </Canvas>
+    </div>
+  );
+}
+
+export default App;

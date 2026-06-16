@@ -1,0 +1,24 @@
+{
+  "containers": [
+    {"id": "CNTR0001", "loc": "S1:6:1", "stack": "1", "size": "20"},
+    {"id": "CNTR0002", "loc": "S1:6:1", "stack": "1", "size": "40"},
+    {"id": "CNTR0003", "loc": "S1:6:2", "stack": "1", "size": "40"},
+    {"id": "CNTR0004", "loc": "S1:6:2", "stack": "2", "size": "40"},
+    {"id": "CNTR0005", "loc": "S1:6:3", "stack": "1", "size": "20"},
+    {"id": "CNTR0006", "loc": "S1:6:3", "stack": "2", "size": "40"},
+    {"id": "CNTR0007", "loc": "S1:6:4", "stack": "1", "size": "40"},
+    {"id": "CNTR0008", "loc": "S1:6:4", "stack": "2", "size": "40"},
+    {"id": "CNTR0009", "loc": "S1:6:5", "stack": "1", "size": "20"},
+    {"id": "CNTR0010", "loc": "S1:6:5", "stack": "2", "size": "40"},
+    {"id": "CNTR0011", "loc": "S1:6:6", "stack": "1", "size": "20"},
+    {"id": "CNTR0012", "loc": "S1:6:6", "stack": "2", "size": "40"},
+    {"id": "CNTR0013", "loc": "S1:6:7", "stack": "1", "size": "20"},
+    {"id": "CNTR0014", "loc": "S1:6:7", "stack": "2", "size": "40"},
+    {"id": "CNTR0015", "loc": "S1:6:8", "stack": "1", "size": "40"},
+    {"id": "CNTR0016", "loc": "S1:6:8", "stack": "2", "size": "40"},
+    {"id": "CNTR0017", "loc": "S1:6:9", "stack": "1", "size": "20"},
+    {"id": "CNTR0018", "loc": "S1:6:9", "stack": "2", "size": "40"},
+    {"id": "CNTR0019", "loc": "S1:6:10", "stack": "1", "size": "20"},
+    {"id": "CNTR0020", "loc": "H4:190:4", "stack": "2", "size": "40"}
+  ]
+}
