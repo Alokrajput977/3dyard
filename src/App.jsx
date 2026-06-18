@@ -104,7 +104,7 @@ const CRANE_COORDS = [
   { lat: 28.510471828319627, lng: 77.28618627929005, type: 'orange' },
   { lat: 28.513893598879548, lng: 77.2870393486428, type: 'yellow' },
   { lat: 28.513437787133046, lng: 77.28773232686511, type: 'orange' },
-  { lat: 28.51020237705503, lan: 77.28787513782136, type: "orange" }
+  { lat: 28.510418860042552, lng:  77.28848155898685, type: "yellow" }
 ];
 
 // --- Helper Functions ---
