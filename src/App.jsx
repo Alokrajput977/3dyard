@@ -8,6 +8,14 @@ import "./App.css";
 const LAT_TO_METERS = 111320;
 const API_POLL_INTERVAL = 5000;
 
+// --- In-Gate Coordinates ---
+const INGATE_POLYGON = [
+  [28.508862180540508, 77.2887146535867],
+  [28.508862180540508, 77.28884621675807],
+  [28.508489551776456, 77.28886578813892],
+  [28.508504839136275, 77.28873313766863]
+];
+
 // --- Head Office Coordinates ---
 const HEAD_OFFICE_POLYGON = [
   [28.50921721347462, 77.2876475691699],
@@ -108,26 +116,14 @@ const CRANE_COORDS = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  🎨 Container color mapping based on shipping line (SLINE_CD)
+//  🎨 Container color mapping
 // ─────────────────────────────────────────────────────────────
 const SHIPPING_LINE_COLORS = {
-  GSA: "#EF4444", // red
-  ACC: "#3B82F6", // blue
-  ESS: "#22C55E", // green
-  MAI: "#F97316", // orange
-  HLC: "#8B5CF6", // purple
-  OOCL: "#F59E0B", // amber
-  MSC: "#10B981", // emerald
-  CMA: "#EC4899", // pink
-  COSCO: "#6366F1", // indigo
-  EVER: "#14B8A6", // teal
-  HMM: "#F43F5E", // rose
-  ONE: "#8B5CF6", // violet
-  YML: "#F97316", // orange
-  ZIM: "#3B82F6", // blue
-  PIL: "#22C55E", // green
-  SITC: "#EF4444", // red
-  default: "#EF4444", // gray
+  GSA: "#EF4444", ACC: "#3B82F6", ESS: "#22C55E", MAI: "#F97316",
+  HLC: "#8B5CF6", OOCL: "#F59E0B", MSC: "#10B981", CMA: "#EC4899",
+  COSCO: "#6366F1", EVER: "#14B8A6", HMM: "#F43F5E", ONE: "#8B5CF6",
+  YML: "#F97316", ZIM: "#3B82F6", PIL: "#22C55E", SITC: "#EF4444",
+  default: "#EF4444",
 };
 
 function getContainerColor(container) {
@@ -136,7 +132,7 @@ function getContainerColor(container) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  🖼️ Generate a corrugated container texture using canvas
+//  🖼️ Generate a corrugated container texture
 // ─────────────────────────────────────────────────────────────
 function createContainerTexture(baseColor, isDark) {
   const canvas = document.createElement("canvas");
@@ -144,43 +140,32 @@ function createContainerTexture(baseColor, isDark) {
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
 
-  // Fill background
   const color = new THREE.Color(baseColor);
   ctx.fillStyle = color.getStyle();
   ctx.fillRect(0, 0, 512, 512);
 
-  // Darken for shadow effect
   const darkColor = color.clone().multiplyScalar(0.7);
   ctx.fillStyle = darkColor.getStyle();
 
-  // Draw vertical corrugation lines
   const spacing = 12;
   for (let x = 0; x < 512; x += spacing) {
     ctx.fillRect(x, 0, 2, 512);
   }
 
-  // Add horizontal bands at top and bottom (like container frames)
   ctx.fillStyle = darkColor.getStyle();
   ctx.fillRect(0, 0, 512, 30);
   ctx.fillRect(0, 482, 512, 30);
 
-  // Add a subtle door outline on the right side (simulate container doors)
   ctx.strokeStyle = darkColor.getStyle();
   ctx.lineWidth = 4;
   ctx.strokeRect(380, 50, 120, 412);
 
-  // Add some rivets (small circles)
   ctx.fillStyle = darkColor.getStyle();
   for (let y = 60; y < 450; y += 40) {
-    ctx.beginPath();
-    ctx.arc(390, y, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(490, y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(390, y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(490, y, 4, 0, Math.PI * 2); ctx.fill();
   }
 
-  // Add a stripe at the bottom (like container marking)
   ctx.fillStyle = "#FFFFFF";
   ctx.globalAlpha = 0.3;
   ctx.fillRect(50, 460, 200, 20);
@@ -193,9 +178,6 @@ function createContainerTexture(baseColor, isDark) {
   return texture;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  🔑 Format slot ID
-// ─────────────────────────────────────────────────────────────
 function formatSlotId(rawId) {
   if (!rawId) return rawId;
   const parts = rawId.split(":");
@@ -206,37 +188,14 @@ function formatSlotId(rawId) {
   return parts.join(":");
 }
 
-// ─────────────────────────────────────────────────────────────
-//  🧮 Helper: compute scene center
-// ─────────────────────────────────────────────────────────────
 function calculateCenter(slots, warehouses) {
-  let minLat = Infinity,
-    maxLat = -Infinity,
-    minLng = Infinity,
-    maxLng = -Infinity;
-  slots.forEach((slot) => {
-    slot.polygon.forEach(([lat, lng]) => {
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
-    });
-  });
-  warehouses.forEach((wh) => {
-    wh.polygon.forEach(([lat, lng]) => {
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
-    });
-  });
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  slots.forEach((slot) => { slot.polygon.forEach(([lat, lng]) => { minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat); minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng); }); });
+  warehouses.forEach((wh) => { wh.polygon.forEach(([lat, lng]) => { minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat); minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng); }); });
   if (minLat === Infinity) return { lat: 28.510, lng: 77.290 };
   return { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
 }
 
-// ─────────────────────────────────────────────────────────────
-//  🎥 Camera zoom handler
-// ─────────────────────────────────────────────────────────────
 const CameraZoomHandler = ({ zoomAction, setZoomAction }) => {
   const { camera, controls } = useThree();
   useEffect(() => {
@@ -252,6 +211,146 @@ const CameraZoomHandler = ({ zoomAction, setZoomAction }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
+//  📦 New Interactive Toll/In-Gate Component
+// ─────────────────────────────────────────────────────────────
+const InGate3D = ({ center, isDark }) => {
+  const [hovered, setHovered] = useState(false);
+
+  const { shape, cx, cz, angle, width } = useMemo(() => {
+    const s = new THREE.Shape();
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+    const points2D = [];
+
+    INGATE_POLYGON.forEach((coord, i) => {
+      const x = (coord[1] - center.lng) * LAT_TO_METERS * lngScale;
+      const y = (coord[0] - center.lat) * LAT_TO_METERS;
+      if (i === 0) s.moveTo(x, y);
+      else s.lineTo(x, y);
+      points2D.push({ wx: x, wz: -y });
+    });
+
+    let centerX = 0, centerZ = 0;
+    points2D.forEach((p) => { centerX += p.wx; centerZ += p.wz; });
+    centerX /= points2D.length;
+    centerZ /= points2D.length;
+
+    // Determine orientation of the gate (find longest edge)
+    let maxDist = 0;
+    let localAngle = 0;
+    let gateWidth = 0;
+
+    for (let i = 0; i < points2D.length; i++) {
+      const p1 = points2D[i];
+      const p2 = points2D[(i + 1) % points2D.length];
+      const dx = p2.wx - p1.wx;
+      const dz = p2.wz - p1.wz;
+      const dist = Math.hypot(dx, dz);
+      if (dist > maxDist) {
+        maxDist = dist;
+        localAngle = Math.atan2(dz, dx);
+        gateWidth = dist;
+      }
+    }
+
+    return { shape: s, cx: centerX, cz: centerZ, angle: localAngle, width: gateWidth };
+  }, [center]);
+
+  // Styling properties
+  const roofColor = "#064E3B"; // Dark Green Shed
+  const skinColor = "#E8C396"; // Skin color walls for booths
+  const barrierBaseColor = isDark ? "#374151" : "#475569";
+  const glassColor = "#38BDF8";
+  
+  const roofHeight = 5.5;
+  const numLanes = 4;
+  const numBooths = numLanes + 1;
+  const laneSpacing = width / numLanes;
+
+  // Realistic Striped Barrier Arm
+  const BarrierArm = () => {
+    const segments = 6;
+    const armLength = laneSpacing * 0.75; // Arm doesn't touch the next booth
+    const segLength = armLength / segments;
+    return (
+      <group rotation={[0, 0, Math.PI / 12]}> {/* Angled slightly up */}
+        {[...Array(segments)].map((_, i) => (
+          <mesh key={i} position={[(i * segLength) + (segLength / 2), 0, 0]} castShadow>
+            <boxGeometry args={[segLength, 0.15, 0.15]} />
+            <meshStandardMaterial color={i % 2 === 0 ? "#EF4444" : "#FFFFFF"} roughness={0.3} />
+          </mesh>
+        ))}
+      </group>
+    );
+  };
+
+  return (
+    <group
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
+    >
+      {/* 1. Dark Green Canopy Shed */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, roofHeight, 0]} castShadow receiveShadow>
+        <extrudeGeometry args={[shape, { depth: 0.5, bevelEnabled: true, bevelThickness: 0.2 }]} />
+        <meshStandardMaterial color={roofColor} roughness={0.6} metalness={0.2} />
+      </mesh>
+
+      {/* 2. Booths & Boom Barriers aligned dynamically */}
+      <group position={[cx, 0, cz]} rotation={[0, -angle, 0]}>
+        {[...Array(numBooths)].map((_, i) => {
+          const offsetX = -width / 2 + (i * laneSpacing);
+
+          return (
+            <group key={`booth-set-${i}`} position={[offsetX, 0, 0]}>
+              {/* Concrete Base Island */}
+              <mesh position={[0, 0.15, 0]} receiveShadow castShadow>
+                <boxGeometry args={[1.8, 0.3, 4]} />
+                <meshStandardMaterial color={isDark ? "#4B5563" : "#9CA3AF"} roughness={0.9} />
+              </mesh>
+
+              {/* Skin-colored Toll Booth */}
+              <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+                <boxGeometry args={[1.2, 3.2, 2.5]} />
+                <meshStandardMaterial color={skinColor} roughness={0.8} />
+              </mesh>
+
+              {/* Booth Glass Windows */}
+              <mesh position={[0, 2, 0]} castShadow>
+                <boxGeometry args={[1.3, 1.2, 2.2]} />
+                <meshStandardMaterial color={glassColor} emissive={glassColor} emissiveIntensity={0.2} metalness={0.8} roughness={0.1} />
+              </mesh>
+
+              {/* Boom Barrier Base and Arm (Rendered for all except the very last post) */}
+              {i < numLanes && (
+                <group position={[0.8, 0.8, 1]}> {/* Placed to the right of the booth */}
+                  {/* Motor Housing */}
+                  <mesh castShadow>
+                    <boxGeometry args={[0.6, 1, 0.6]} />
+                    <meshStandardMaterial color={barrierBaseColor} metalness={0.7} roughness={0.4} />
+                  </mesh>
+                  {/* Striped Arm */}
+                  <group position={[0.3, 0.3, 0]}>
+                    <BarrierArm />
+                  </group>
+                </group>
+              )}
+            </group>
+          );
+        })}
+      </group>
+
+      {hovered && (
+        <Html position={[cx, roofHeight + 3, cz]} center style={{ pointerEvents: "none" }}>
+          <div className={`tooltip-3d ${isDark ? "dark" : "light"}`} style={{ fontWeight: "bold", fontSize: "14px", background: "#10B981", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px" }}>
+            Main Terminal In-Gate
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
+
+// ─────────────────────────────────────────────────────────────
 //  📦 Container geometries (shared)
 // ─────────────────────────────────────────────────────────────
 const geo40ft = new THREE.BoxGeometry(12.2, 2.6, 2.4);
@@ -259,79 +358,46 @@ const geo20ft = new THREE.BoxGeometry(6.1, 2.6, 2.4);
 const edges40ft = new THREE.EdgesGeometry(geo40ft);
 const edges20ft = new THREE.EdgesGeometry(geo20ft);
 
-// ─────────────────────────────────────────────────────────────
-//  🧱 Container3D component with color and texture
-// ─────────────────────────────────────────────────────────────
 const Container3D = React.memo(({ data, isDark, onClick }) => {
   const [hovered, setHovered] = useState(false);
   const geometry = data.is40 ? geo40ft : geo20ft;
   const edgeGeo = data.is40 ? edges40ft : edges20ft;
 
-  // Get color for this container
   const color = getContainerColor(data);
-  // Create texture (memoized per color + dark mode)
   const texture = useMemo(() => createContainerTexture(color, isDark), [color, isDark]);
 
-  // Material with texture
   const material = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      map: texture,
-      roughness: 0.5,
-      metalness: 0.3,
-      color: new THREE.Color(color),
+      map: texture, roughness: 0.5, metalness: 0.3, color: new THREE.Color(color),
     });
   }, [texture, color]);
 
-  // Hover material override (slightly lighter)
   const hoverMaterial = useMemo(() => {
     const c = new THREE.Color(color);
     c.lerp(new THREE.Color(0xffffff), 0.3);
     return new THREE.MeshStandardMaterial({
-      map: texture,
-      roughness: 0.3,
-      metalness: 0.2,
-      color: c,
+      map: texture, roughness: 0.3, metalness: 0.2, color: c,
     });
   }, [texture, color]);
 
   const currentMaterial = hovered ? hoverMaterial : material;
-
-  // Edge material
   const edgeMaterial = useMemo(() => {
     return new THREE.LineBasicMaterial({ color: isDark ? "#4B5563" : "#374151" });
   }, [isDark]);
 
   return (
     <mesh
-      position={[data.x, data.y, data.z]}
-      rotation={[0, -data.angle, 0]}
-      castShadow={false}
-      receiveShadow={false}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-        document.body.style.cursor = "auto";
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick(data);
-      }}
-      geometry={geometry}
-      material={currentMaterial}
+      position={[data.x, data.y, data.z]} rotation={[0, -data.angle, 0]}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
+      onClick={(e) => { e.stopPropagation(); onClick(data); }}
+      geometry={geometry} material={currentMaterial}
     >
       <lineSegments geometry={edgeGeo} material={edgeMaterial} />
     </mesh>
   );
 });
 
-// ─────────────────────────────────────────────────────────────
-//  🏗️ Crane3D component (unchanged)
-// ─────────────────────────────────────────────────────────────
 const Crane3D = ({ lat, lng, type, center, isDark }) => {
   const lngScale = Math.cos((center.lat * Math.PI) / 200);
   const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
@@ -342,62 +408,23 @@ const Crane3D = ({ lat, lng, type, center, isDark }) => {
 
   return (
     <group position={[x, 0, z]}>
-      <mesh position={[-12, 1.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 3, 10]} />
-        <meshStandardMaterial color={darkMetal} roughness={0.8} />
-      </mesh>
-      <mesh position={[12, 1.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 3, 10]} />
-        <meshStandardMaterial color={darkMetal} roughness={0.8} />
-      </mesh>
-      <mesh position={[-12, 13, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3, 20, 3]} />
-        <meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} />
-      </mesh>
-      <mesh position={[12, 13, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3, 20, 3]} />
-        <meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} />
-      </mesh>
+      <mesh position={[-12, 1.5, 0]} castShadow receiveShadow><boxGeometry args={[4, 3, 10]} /><meshStandardMaterial color={darkMetal} roughness={0.8} /></mesh>
+      <mesh position={[12, 1.5, 0]} castShadow receiveShadow><boxGeometry args={[4, 3, 10]} /><meshStandardMaterial color={darkMetal} roughness={0.8} /></mesh>
+      <mesh position={[-12, 13, 0]} castShadow receiveShadow><boxGeometry args={[3, 20, 3]} /><meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} /></mesh>
+      <mesh position={[12, 13, 0]} castShadow receiveShadow><boxGeometry args={[3, 20, 3]} /><meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} /></mesh>
       {isYellow ? (
-        <>
-          <mesh position={[0, 24, -1.5]} castShadow receiveShadow>
-            <boxGeometry args={[34, 3, 1.5]} />
-            <meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} />
-          </mesh>
-          <mesh position={[0, 24, 1.5]} castShadow receiveShadow>
-            <boxGeometry args={[34, 3, 1.5]} />
-            <meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} />
-          </mesh>
-        </>
+        <><mesh position={[0, 24, -1.5]} castShadow receiveShadow><boxGeometry args={[34, 3, 1.5]} /><meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} /></mesh><mesh position={[0, 24, 1.5]} castShadow receiveShadow><boxGeometry args={[34, 3, 1.5]} /><meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} /></mesh></>
       ) : (
-        <mesh position={[0, 24, 0]} castShadow receiveShadow>
-          <boxGeometry args={[34, 3, 4.5]} />
-          <meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} />
-        </mesh>
+        <mesh position={[0, 24, 0]} castShadow receiveShadow><boxGeometry args={[34, 3, 4.5]} /><meshStandardMaterial color={craneColor} roughness={0.5} metalness={0.2} /></mesh>
       )}
-      <mesh position={[0, 26.5, 0]} castShadow receiveShadow>
-        <boxGeometry args={[6, 3, 5]} />
-        <meshStandardMaterial color={craneColor} />
-      </mesh>
-      <mesh position={[-2, 17, 0]}>
-        <cylinderGeometry args={[0.05, 0.05, 12]} />
-        <meshStandardMaterial color="#111827" />
-      </mesh>
-      <mesh position={[2, 17, 0]}>
-        <cylinderGeometry args={[0.05, 0.05, 12]} />
-        <meshStandardMaterial color="#111827" />
-      </mesh>
-      <mesh position={[0, 11, 0]} castShadow receiveShadow>
-        <boxGeometry args={[8, 1, 3]} />
-        <meshStandardMaterial color={darkMetal} />
-      </mesh>
+      <mesh position={[0, 26.5, 0]} castShadow receiveShadow><boxGeometry args={[6, 3, 5]} /><meshStandardMaterial color={craneColor} /></mesh>
+      <mesh position={[-2, 17, 0]}><cylinderGeometry args={[0.05, 0.05, 12]} /><meshStandardMaterial color="#111827" /></mesh>
+      <mesh position={[2, 17, 0]}><cylinderGeometry args={[0.05, 0.05, 12]} /><meshStandardMaterial color="#111827" /></mesh>
+      <mesh position={[0, 11, 0]} castShadow receiveShadow><boxGeometry args={[8, 1, 3]} /><meshStandardMaterial color={darkMetal} /></mesh>
     </group>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🛤️ TrackSegment (unchanged)
-// ─────────────────────────────────────────────────────────────
 const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
   const trackCenters = [-6, -2, 2, 6];
   const gaugeHalf = 1.676 / 2;
@@ -405,57 +432,27 @@ const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
   const poleSpacing = 40;
   const numPoles = Math.floor(len / poleSpacing);
   const poles = [];
-  for (let k = 0; k <= numPoles; k++) {
-    poles.push(-len / 2 + k * poleSpacing);
-  }
+  for (let k = 0; k <= numPoles; k++) { poles.push(-len / 2 + k * poleSpacing); }
   const signalColors = [true, false, true, false];
 
   return (
     <group position={[cx, 0.05, cz]} rotation={[0, angle, 0]}>
-      <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
-        <boxGeometry args={[20, 0.4, len]} />
-        <meshStandardMaterial color={isDark ? "#3F3F46" : "#D4D4D8"} roughness={0.9} />
-      </mesh>
+      <mesh position={[0, 0.2, 0]} castShadow receiveShadow><boxGeometry args={[20, 0.4, len]} /><meshStandardMaterial color={isDark ? "#3F3F46" : "#D4D4D8"} roughness={0.9} /></mesh>
       {trackCenters.map((tc, idx) => (
         <group key={`track-lines-${idx}`}>
-          <mesh position={[tc - gaugeHalf, 0.5, 0]} castShadow receiveShadow>
-            <boxGeometry args={[railW, 0.2, len]} />
-            <meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[tc + gaugeHalf, 0.5, 0]} castShadow receiveShadow>
-            <boxGeometry args={[railW, 0.2, len]} />
-            <meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[tc, 9.5, 0]}>
-            <boxGeometry args={[0.05, 0.05, len]} />
-            <meshStandardMaterial color="#1F2937" metalness={0.9} roughness={0.1} />
-          </mesh>
+          <mesh position={[tc - gaugeHalf, 0.5, 0]} castShadow receiveShadow><boxGeometry args={[railW, 0.2, len]} /><meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} /></mesh>
+          <mesh position={[tc + gaugeHalf, 0.5, 0]} castShadow receiveShadow><boxGeometry args={[railW, 0.2, len]} /><meshStandardMaterial color={isDark ? "#9CA3AF" : "#6B7280"} metalness={0.8} roughness={0.2} /></mesh>
+          <mesh position={[tc, 9.5, 0]}><boxGeometry args={[0.05, 0.05, len]} /><meshStandardMaterial color="#1F2937" metalness={0.9} roughness={0.1} /></mesh>
         </group>
       ))}
       {poles.map((zOffset, i) => (
         <group key={`pole-${i}`} position={[0, 0, zOffset]}>
-          <mesh position={[-9.5, 5, 0]} castShadow>
-            <boxGeometry args={[0.4, 10, 0.4]} />
-            <meshStandardMaterial color="#475569" metalness={0.6} roughness={0.5} />
-          </mesh>
-          <mesh position={[-0.5, 9.5, 0]} castShadow>
-            <boxGeometry args={[18.4, 0.3, 0.4]} />
-            <meshStandardMaterial color="#334155" metalness={0.7} />
-          </mesh>
+          <mesh position={[-9.5, 5, 0]} castShadow><boxGeometry args={[0.4, 10, 0.4]} /><meshStandardMaterial color="#475569" metalness={0.6} roughness={0.5} /></mesh>
+          <mesh position={[-0.5, 9.5, 0]} castShadow><boxGeometry args={[18.4, 0.3, 0.4]} /><meshStandardMaterial color="#334155" metalness={0.7} /></mesh>
           {trackCenters.map((trackCenter, idx) => (
             <group key={`signal-${idx}`} position={[trackCenter, 8.5, 0.2]}>
-              <mesh castShadow>
-                <boxGeometry args={[0.7, 1.4, 0.5]} />
-                <meshStandardMaterial color="#111827" />
-              </mesh>
-              <mesh position={[0, 0, 0.26]}>
-                <circleGeometry args={[0.25, 16]} />
-                <meshStandardMaterial
-                  color={signalColors[idx] ? "#10B981" : "#EF4444"}
-                  emissive={signalColors[idx] ? "#10B981" : "#EF4444"}
-                  emissiveIntensity={3}
-                />
-              </mesh>
+              <mesh castShadow><boxGeometry args={[0.7, 1.4, 0.5]} /><meshStandardMaterial color="#111827" /></mesh>
+              <mesh position={[0, 0, 0.26]}><circleGeometry args={[0.25, 16]} /><meshStandardMaterial color={signalColors[idx] ? "#10B981" : "#EF4444"} emissive={signalColors[idx] ? "#10B981" : "#EF4444"} emissiveIntensity={3} /></mesh>
             </group>
           ))}
         </group>
@@ -464,9 +461,6 @@ const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🧱 WallDecorations (unchanged)
-// ─────────────────────────────────────────────────────────────
 const WallDecorations = ({ segment }) => {
   const { midX, midZ, nx, nz, len } = segment;
   const rotationY = Math.atan2(nx, nz);
@@ -476,53 +470,22 @@ const WallDecorations = ({ segment }) => {
 
   const renderShutter = (offsetX) => (
     <group position={[offsetX, 4, 0]} key={`shutter-${offsetX}`}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[4, 8, 0.1]} />
-        <meshStandardMaterial color="#9CA3AF" roughness={0.6} metalness={0.5} />
-      </mesh>
-      <mesh position={[-1, 1.5, 0.06]}>
-        <boxGeometry args={[1, 0.5, 0.05]} />
-        <meshStandardMaterial color="#1F2937" />
-      </mesh>
-      <mesh position={[1, 1.5, 0.06]}>
-        <boxGeometry args={[1, 0.5, 0.05]} />
-        <meshStandardMaterial color="#1F2937" />
-      </mesh>
-      <mesh position={[-2.5, -3.25, 0.5]} castShadow>
-        <cylinderGeometry args={[0.15, 0.15, 1.5, 12]} />
-        <meshStandardMaterial color="#EAB308" roughness={0.4} />
-      </mesh>
-      <mesh position={[2.5, -3.25, 0.5]} castShadow>
-        <cylinderGeometry args={[0.15, 0.15, 1.5, 12]} />
-        <meshStandardMaterial color="#EAB308" roughness={0.4} />
-      </mesh>
+      <mesh castShadow receiveShadow><boxGeometry args={[4, 8, 0.1]} /><meshStandardMaterial color="#9CA3AF" roughness={0.6} metalness={0.5} /></mesh>
+      <mesh position={[-1, 1.5, 0.06]}><boxGeometry args={[1, 0.5, 0.05]} /><meshStandardMaterial color="#1F2937" /></mesh>
+      <mesh position={[1, 1.5, 0.06]}><boxGeometry args={[1, 0.5, 0.05]} /><meshStandardMaterial color="#1F2937" /></mesh>
+      <mesh position={[-2.5, -3.25, 0.5]} castShadow><cylinderGeometry args={[0.15, 0.15, 1.5, 12]} /><meshStandardMaterial color="#EAB308" roughness={0.4} /></mesh>
+      <mesh position={[2.5, -3.25, 0.5]} castShadow><cylinderGeometry args={[0.15, 0.15, 1.5, 12]} /><meshStandardMaterial color="#EAB308" roughness={0.4} /></mesh>
     </group>
   );
 
   return (
     <group position={pos} rotation={yRotation}>
-      {len > 18 && (
-        <>
-          {renderShutter(-3.5)}
-          {renderShutter(3.5)}
-        </>
-      )}
-      {len > 10 && len <= 18 && (
-        <>
-          {renderShutter(-2)}
-          <mesh position={[3, 2.5, 0]} castShadow>
-            <boxGeometry args={[2, 5, 0.1]} />
-            <meshStandardMaterial color="#4B5563" roughness={0.8} />
-          </mesh>
-        </>
-      )}
+      {len > 18 && (<>{renderShutter(-3.5)}{renderShutter(3.5)}</>)}
+      {len > 10 && len <= 18 && (<>{renderShutter(-2)}<mesh position={[3, 2.5, 0]} castShadow><boxGeometry args={[2, 5, 0.1]} /><meshStandardMaterial color="#4B5563" roughness={0.8} /></mesh></>)}
     </group>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🏭 Warehouse3D (unchanged)
-// ─────────────────────────────────────────────────────────────
 const Warehouse3D = ({ data, center, isDark }) => {
   const [hovered, setHovered] = useState(false);
   const { shape, wallSegments } = useMemo(() => {
@@ -537,14 +500,9 @@ const Warehouse3D = ({ data, center, isDark }) => {
       else s.lineTo(x, y);
       points2D.push({ wx: x, wz: -y });
     });
-    let cx = 0,
-      cz = 0;
-    points2D.forEach((p) => {
-      cx += p.wx;
-      cz += p.wz;
-    });
-    cx /= points2D.length;
-    cz /= points2D.length;
+    let cx = 0, cz = 0;
+    points2D.forEach((p) => { cx += p.wx; cz += p.wz; });
+    cx /= points2D.length; cz /= points2D.length;
     const segments = [];
     for (let i = 0; i < points2D.length - 1; i++) {
       const p1 = points2D[i];
@@ -554,12 +512,8 @@ const Warehouse3D = ({ data, center, isDark }) => {
       const len = Math.sqrt(dx * dx + dz * dz);
       const midX = (p1.wx + p2.wx) / 2;
       const midZ = (p1.wz + p2.wz) / 2;
-      let nx = dz / len,
-        nz = -dx / len;
-      if (nx * (midX - cx) + nz * (midZ - cz) < 0) {
-        nx = -nx;
-        nz = -nz;
-      }
+      let nx = dz / len, nz = -dx / len;
+      if (nx * (midX - cx) + nz * (midZ - cz) < 0) { nx = -nx; nz = -nz; }
       segments.push({ midX, midZ, nx, nz, len });
     }
     return { shape: s, wallSegments: segments };
@@ -568,33 +522,13 @@ const Warehouse3D = ({ data, center, isDark }) => {
   return (
     <group>
       <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.05, 0]}
-        castShadow
-        receiveShadow
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = "pointer";
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          document.body.style.cursor = "auto";
-        }}
+        rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} castShadow receiveShadow
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
       >
         <extrudeGeometry args={[shape, { depth: 10, bevelEnabled: false }]} />
-        <meshStandardMaterial
-          attach="material-0"
-          color={hovered ? (isDark ? "#94A3B8" : "#E2E8F0") : isDark ? "#475569" : "#94A3B8"}
-          roughness={0.7}
-          metalness={0.3}
-        />
-        <meshStandardMaterial
-          attach="material-1"
-          color={hovered ? (isDark ? "#94A3B8" : "#E2E8F0") : isDark ? "#64748B" : "#F1F5F9"}
-          roughness={0.9}
-        />
+        <meshStandardMaterial attach="material-0" color={hovered ? (isDark ? "#94A3B8" : "#E2E8F0") : isDark ? "#475569" : "#94A3B8"} roughness={0.7} metalness={0.3} />
+        <meshStandardMaterial attach="material-1" color={hovered ? (isDark ? "#94A3B8" : "#E2E8F0") : isDark ? "#64748B" : "#F1F5F9"} roughness={0.9} />
       </mesh>
       {wallSegments.map((segment, idx) => (
         <WallDecorations key={`wall-detail-${idx}`} segment={segment} />
@@ -608,9 +542,6 @@ const Warehouse3D = ({ data, center, isDark }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🏢 OfficeWallDecorations (unchanged)
-// ─────────────────────────────────────────────────────────────
 const OfficeWallDecorations = ({ segment, isDark }) => {
   const { midX, midZ, nx, nz, len } = segment;
   const rotationY = Math.atan2(nx, nz);
@@ -632,20 +563,8 @@ const OfficeWallDecorations = ({ segment, isDark }) => {
       [2, 6, 10, 14].forEach((h) => {
         windows.push(
           <group key={`win-${i}-${h}`} position={[offsetX, h, 0]}>
-            <mesh castShadow>
-              <boxGeometry args={[windowWidth, 2.5, 0.1]} />
-              <meshStandardMaterial color={frameColor} roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 0, 0.06]}>
-              <boxGeometry args={[windowWidth - 0.2, 2.3, 0.05]} />
-              <meshStandardMaterial
-                color={glassColor}
-                metalness={0.9}
-                roughness={0.1}
-                emissive={glassColor}
-                emissiveIntensity={0.2}
-              />
-            </mesh>
+            <mesh castShadow><boxGeometry args={[windowWidth, 2.5, 0.1]} /><meshStandardMaterial color={frameColor} roughness={0.8} /></mesh>
+            <mesh position={[0, 0, 0.06]}><boxGeometry args={[windowWidth - 0.2, 2.3, 0.05]} /><meshStandardMaterial color={glassColor} metalness={0.9} roughness={0.1} emissive={glassColor} emissiveIntensity={0.2} /></mesh>
           </group>
         );
       });
@@ -656,31 +575,16 @@ const OfficeWallDecorations = ({ segment, isDark }) => {
   return (
     <group position={pos} rotation={yRotation}>
       {[4, 8, 12].map((y) => (
-        <mesh key={`band-${y}`} position={[0, y, 0]} castShadow>
-          <boxGeometry args={[len, 0.4, 0.2]} />
-          <meshStandardMaterial color={frameColor} metalness={0.5} />
-        </mesh>
+        <mesh key={`band-${y}`} position={[0, y, 0]} castShadow><boxGeometry args={[len, 0.4, 0.2]} /><meshStandardMaterial color={frameColor} metalness={0.5} /></mesh>
       ))}
       {len > 15 ? (
         <>
           {buildWindows()}
           <group position={[0, 2, 0.1]}>
-            <mesh castShadow>
-              <boxGeometry args={[6, 4, 0.2]} />
-              <meshStandardMaterial color={frameColor} />
-            </mesh>
-            <mesh position={[-1.5, 0, 0.1]}>
-              <boxGeometry args={[2.5, 3.5, 0.1]} />
-              <meshStandardMaterial color={gateColor} />
-            </mesh>
-            <mesh position={[1.5, 0, 0.1]}>
-              <boxGeometry args={[2.5, 3.5, 0.1]} />
-              <meshStandardMaterial color={gateColor} />
-            </mesh>
-            <mesh position={[0, 2.2, 1.5]} castShadow>
-              <boxGeometry args={[7, 0.4, 3]} />
-              <meshStandardMaterial color={frameColor} />
-            </mesh>
+            <mesh castShadow><boxGeometry args={[6, 4, 0.2]} /><meshStandardMaterial color={frameColor} /></mesh>
+            <mesh position={[-1.5, 0, 0.1]}><boxGeometry args={[2.5, 3.5, 0.1]} /><meshStandardMaterial color={gateColor} /></mesh>
+            <mesh position={[1.5, 0, 0.1]}><boxGeometry args={[2.5, 3.5, 0.1]} /><meshStandardMaterial color={gateColor} /></mesh>
+            <mesh position={[0, 2.2, 1.5]} castShadow><boxGeometry args={[7, 0.4, 3]} /><meshStandardMaterial color={frameColor} /></mesh>
           </group>
         </>
       ) : (
@@ -690,33 +594,15 @@ const OfficeWallDecorations = ({ segment, isDark }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  📡 NetworkTower (unchanged)
-// ─────────────────────────────────────────────────────────────
 const NetworkTower = ({ cx, cz }) => (
   <group position={[cx, 16, cz]}>
-    <mesh position={[0, 3, 0]} castShadow>
-      <cylinderGeometry args={[0.6, 1.2, 6, 8]} />
-      <meshStandardMaterial color="#64748B" metalness={0.8} roughness={0.3} />
-    </mesh>
-    <mesh position={[0, 8.5, 0]} castShadow>
-      <cylinderGeometry args={[0.1, 0.1, 5, 8]} />
-      <meshStandardMaterial color="#94A3B8" metalness={0.9} />
-    </mesh>
-    <mesh position={[0.7, 4.5, 0]} rotation={[0, 0, Math.PI / 3]}>
-      <sphereGeometry args={[0.8, 16, 16, 0, Math.PI]} />
-      <meshStandardMaterial color="#F8FAFC" roughness={0.1} />
-    </mesh>
-    <mesh position={[0, 11, 0]}>
-      <sphereGeometry args={[0.2, 16, 16]} />
-      <meshStandardMaterial color="#EF4444" emissive="#EF4444" emissiveIntensity={3} />
-    </mesh>
+    <mesh position={[0, 3, 0]} castShadow><cylinderGeometry args={[0.6, 1.2, 6, 8]} /><meshStandardMaterial color="#64748B" metalness={0.8} roughness={0.3} /></mesh>
+    <mesh position={[0, 8.5, 0]} castShadow><cylinderGeometry args={[0.1, 0.1, 5, 8]} /><meshStandardMaterial color="#94A3B8" metalness={0.9} /></mesh>
+    <mesh position={[0.7, 4.5, 0]} rotation={[0, 0, Math.PI / 3]}><sphereGeometry args={[0.8, 16, 16, 0, Math.PI]} /><meshStandardMaterial color="#F8FAFC" roughness={0.1} /></mesh>
+    <mesh position={[0, 11, 0]}><sphereGeometry args={[0.2, 16, 16]} /><meshStandardMaterial color="#EF4444" emissive="#EF4444" emissiveIntensity={3} /></mesh>
   </group>
 );
 
-// ─────────────────────────────────────────────────────────────
-//  🏢 HeadOffice3D (unchanged)
-// ─────────────────────────────────────────────────────────────
 const HeadOffice3D = ({ center, isDark }) => {
   const [hovered, setHovered] = useState(false);
   const BUILDING_HEIGHT = 16;
@@ -728,18 +614,12 @@ const HeadOffice3D = ({ center, isDark }) => {
       const [lat, lng] = coord;
       const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
       const y = (lat - center.lat) * LAT_TO_METERS;
-      if (i === 0) s.moveTo(x, y);
-      else s.lineTo(x, y);
+      if (i === 0) s.moveTo(x, y); else s.lineTo(x, y);
       points2D.push({ wx: x, wz: -y });
     });
-    let centerX = 0,
-      centerZ = 0;
-    points2D.forEach((p) => {
-      centerX += p.wx;
-      centerZ += p.wz;
-    });
-    centerX /= points2D.length;
-    centerZ /= points2D.length;
+    let centerX = 0, centerZ = 0;
+    points2D.forEach((p) => { centerX += p.wx; centerZ += p.wz; });
+    centerX /= points2D.length; centerZ /= points2D.length;
     const segments = [];
     for (let i = 0; i < points2D.length - 1; i++) {
       const p1 = points2D[i];
@@ -749,12 +629,8 @@ const HeadOffice3D = ({ center, isDark }) => {
       const len = Math.sqrt(dx * dx + dz * dz);
       const midX = (p1.wx + p2.wx) / 2;
       const midZ = (p1.wz + p2.wz) / 2;
-      let nx = dz / len,
-        nz = -dx / len;
-      if (nx * (midX - centerX) + nz * (midZ - centerZ) < 0) {
-        nx = -nx;
-        nz = -nz;
-      }
+      let nx = dz / len, nz = -dx / len;
+      if (nx * (midX - centerX) + nz * (midZ - centerZ) < 0) { nx = -nx; nz = -nz; }
       segments.push({ midX, midZ, nx, nz, len });
     }
     return { shape: s, wallSegments: segments, cx: centerX, cz: centerZ };
@@ -765,34 +641,13 @@ const HeadOffice3D = ({ center, isDark }) => {
   return (
     <group>
       <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0.05, 0]}
-        castShadow
-        receiveShadow
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = "pointer";
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setHovered(false);
-          document.body.style.cursor = "auto";
-        }}
+        rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} castShadow receiveShadow
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+        onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
       >
         <extrudeGeometry args={[shape, { depth: BUILDING_HEIGHT, bevelEnabled: false }]} />
-        <meshStandardMaterial
-          attach="material-0"
-          color={hovered ? hoverColor : buildingBaseColor}
-          roughness={0.4}
-          metalness={0.2}
-        />
-        <meshStandardMaterial
-          attach="material-1"
-          color={hovered ? hoverColor : buildingBaseColor}
-          roughness={0.4}
-          metalness={0.2}
-        />
+        <meshStandardMaterial attach="material-0" color={hovered ? hoverColor : buildingBaseColor} roughness={0.4} metalness={0.2} />
+        <meshStandardMaterial attach="material-1" color={hovered ? hoverColor : buildingBaseColor} roughness={0.4} metalness={0.2} />
       </mesh>
       {wallSegments.map((segment, idx) => (
         <OfficeWallDecorations key={`ho-wall-${idx}`} segment={segment} isDark={isDark} />
@@ -800,18 +655,7 @@ const HeadOffice3D = ({ center, isDark }) => {
       <NetworkTower cx={cx} cz={cz} />
       {hovered && (
         <Html position={[cx, BUILDING_HEIGHT + 10, cz]} center style={{ pointerEvents: "none" }}>
-          <div
-            className={`tooltip-3d ${isDark ? "dark" : "light"}`}
-            style={{
-              fontWeight: "bold",
-              fontSize: "14px",
-              background: "#38BDF8",
-              color: "#fff",
-              border: "none",
-              padding: "6px 12px",
-              borderRadius: "4px",
-            }}
-          >
+          <div className={`tooltip-3d ${isDark ? "dark" : "light"}`} style={{ fontWeight: "bold", fontSize: "14px", background: "#38BDF8", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px" }}>
             Main Head Office
           </div>
         </Html>
@@ -820,9 +664,6 @@ const HeadOffice3D = ({ center, isDark }) => {
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🟫 Slot3D (unchanged)
-// ─────────────────────────────────────────────────────────────
 const Slot3D = ({ slot, center, isDark, onClick }) => {
   const [hovered, setHovered] = useState(false);
   const shape = useMemo(() => {
@@ -832,44 +673,24 @@ const Slot3D = ({ slot, center, isDark, onClick }) => {
       const [lat, lng] = coord;
       const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
       const z = (lat - center.lat) * LAT_TO_METERS;
-      if (i === 0) s.moveTo(x, z);
-      else s.lineTo(x, z);
+      if (i === 0) s.moveTo(x, z); else s.lineTo(x, z);
     });
     return s;
   }, [slot, center]);
 
   return (
     <mesh
-      rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0.01, 0]}
-      receiveShadow
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-        document.body.style.cursor = "auto";
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick(slot);
-      }}
+      rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
+      onClick={(e) => { e.stopPropagation(); onClick(slot); }}
     >
       <extrudeGeometry args={[shape, { depth: 1, bevelEnabled: false }]} />
-      <meshStandardMaterial
-        color={hovered ? (isDark ? "#4B5563" : "#F3F4F6") : isDark ? "#374151" : "#E5E7EB"}
-        roughness={0.9}
-      />
+      <meshStandardMaterial color={hovered ? (isDark ? "#4B5563" : "#F3F4F6") : isDark ? "#374151" : "#E5E7EB"} roughness={0.9} />
     </mesh>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-//  🏠 App
-// ─────────────────────────────────────────────────────────────
 function App() {
   const [slots, setSlots] = useState([]);
   const [containers, setContainers] = useState([]);
@@ -880,7 +701,6 @@ function App() {
   const [zoomAction, setZoomAction] = useState(null);
   const [isDark, setIsDark] = useState(false);
 
-  // ─── Data fetch ──────────────────────────────────────────
   const fetchYardData = useCallback(() => {
     Promise.all([
       fetch("/slots.json").then((res) => (res.ok ? res.json() : [])),
@@ -890,18 +710,13 @@ function App() {
         const validSlots = slotsData.filter((item) => item.polygon && item.polygon.length >= 3);
         setSlots(validSlots);
 
-        // ─── Map containers ──────────────────────────
         const mappedContainers = Array.isArray(containersDataArray)
           ? containersDataArray
               .filter((item) => item.STK_ID && item.ROW_NO !== undefined && item.COLUMN_NO !== undefined)
               .map((item) => {
                 const heightChar = item.HEIGHT ? item.HEIGHT.toUpperCase() : "A";
-                const stackLvl = heightChar.charCodeAt(0) - 64; // A=1, B=2, …
-
-                const rawSlotKey = `${String(item.STK_ID).trim()}:${String(item.ROW_NO).padStart(
-                  3,
-                  "0"
-                )}:${String(item.COLUMN_NO).padStart(3, "0")}`;
+                const stackLvl = heightChar.charCodeAt(0) - 64; 
+                const rawSlotKey = `${String(item.STK_ID).trim()}:${String(item.ROW_NO).padStart(3, "0")}:${String(item.COLUMN_NO).padStart(3, "0")}`;
 
                 return {
                   id: item['20"CTR_NO'] || item.ID || "UNKNOWN",
@@ -924,10 +739,7 @@ function App() {
       })
       .catch((err) => {
         console.warn("API Error / Files not found.", err);
-        if (loading) {
-          setCenter(calculateCenter([], WAREHOUSE_DATA));
-          setLoading(false);
-        }
+        if (loading) { setCenter(calculateCenter([], WAREHOUSE_DATA)); setLoading(false); }
       });
   }, [loading]);
 
@@ -937,42 +749,26 @@ function App() {
     return () => clearInterval(intervalId);
   }, [fetchYardData]);
 
-  // ─── Container placement engine ──────────────────────────
   const placedContainers = useMemo(() => {
     const slotGroups = {};
     const lngScale = Math.cos((center.lat * Math.PI) / 180);
 
     slots.forEach((slot) => {
       const formattedId = formatSlotId(slot.id);
-      if (!slotGroups[formattedId]) {
-        slotGroups[formattedId] = { polygons: [] };
-      }
+      if (!slotGroups[formattedId]) slotGroups[formattedId] = { polygons: [] };
       const points = slot.polygon.map((coord) => ({
         x: (coord[1] - center.lng) * LAT_TO_METERS * lngScale,
         z: -(coord[0] - center.lat) * LAT_TO_METERS,
       }));
-      let minX = Infinity,
-        maxX = -Infinity,
-        minZ = Infinity,
-        maxZ = -Infinity;
-      points.forEach((p) => {
-        minX = Math.min(minX, p.x);
-        maxX = Math.max(maxX, p.x);
-        minZ = Math.min(minZ, p.z);
-        maxZ = Math.max(maxZ, p.z);
-      });
+      let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+      points.forEach((p) => { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z); });
       const cx = (minX + maxX) / 2;
       const cz = (minZ + maxZ) / 2;
-      let maxDist = 0,
-        angle = 0;
+      let maxDist = 0, angle = 0;
       for (let i = 0; i < points.length - 1; i++) {
-        const dx = points[i + 1].x - points[i].x;
-        const dz = points[i + 1].z - points[i].z;
+        const dx = points[i + 1].x - points[i].x; const dz = points[i + 1].z - points[i].z;
         const dist = Math.hypot(dx, dz);
-        if (dist > maxDist) {
-          maxDist = dist;
-          angle = Math.atan2(dz, dx);
-        }
+        if (dist > maxDist) { maxDist = dist; angle = Math.atan2(dz, dx); }
       }
       slotGroups[formattedId].polygons.push({ cx, cz, angle });
     });
@@ -981,7 +777,6 @@ function App() {
     containers.forEach((container) => {
       const stackLvl = parseInt(container.stack || "1", 10);
       if (stackLvl < 1 || stackLvl > 6) return;
-
       const group = slotGroups[container.loc];
       if (!group) return;
 
@@ -989,27 +784,17 @@ function App() {
       const height = 2.6;
       const y = (stackLvl - 1) * height + height / 2 + 0.1;
 
-      let x = 0,
-        z = 0,
-        angle = 0;
+      let x = 0, z = 0, angle = 0;
       if (is40) {
-        let sumX = 0,
-          sumZ = 0;
-        group.polygons.forEach((p) => {
-          sumX += p.cx;
-          sumZ += p.cz;
-        });
-        x = sumX / group.polygons.length;
-        z = sumZ / group.polygons.length;
-        angle = group.polygons[0].angle;
+        let sumX = 0, sumZ = 0;
+        group.polygons.forEach((p) => { sumX += p.cx; sumZ += p.cz; });
+        x = sumX / group.polygons.length; z = sumZ / group.polygons.length; angle = group.polygons[0].angle;
       } else {
         const stackKey = `stack_${stackLvl}`;
         if (group[stackKey] === undefined) group[stackKey] = 0;
         const polyIndex = group[stackKey] % group.polygons.length;
         const targetPoly = group.polygons[polyIndex];
-        x = targetPoly.cx;
-        z = targetPoly.cz;
-        angle = targetPoly.angle;
+        x = targetPoly.cx; z = targetPoly.cz; angle = targetPoly.angle;
         group[stackKey]++;
       }
       result.push({ ...container, x, y, z, angle, is40 });
@@ -1017,15 +802,12 @@ function App() {
     return result;
   }, [slots, containers, center]);
 
-  // ─── Loading state ────────────────────────────────────────
   if (loading) {
     return <div className={`screen-message ${isDark ? "dark" : "light"}`}>Loading Live 3D Engine…</div>;
   }
 
-  // ─── Render ──────────────────────────────────────────────
   return (
     <div className={`app-container ${isDark ? "theme-dark" : "theme-light"}`}>
-      {/* ─── UI Overlay ─── */}
       <div className="ui-overlay">
         <div className="ui-header">
           <h1>Logistics 3D Yard</h1>
@@ -1033,16 +815,7 @@ function App() {
             {slots.length} Yard Slots | {containers.length} Containers | {WAREHOUSE_DATA.length} Warehouses
           </p>
           <div style={{ fontSize: "12px", marginTop: "5px", display: "flex", alignItems: "center", gap: "5px" }}>
-            <span
-              style={{
-                display: "inline-block",
-                width: "8px",
-                height: "8px",
-                background: "#10B981",
-                borderRadius: "50%",
-                boxShadow: "0 0 5px #10B981",
-              }}
-            />
+            <span style={{ display: "inline-block", width: "8px", height: "8px", background: "#10B981", borderRadius: "50%", boxShadow: "0 0 5px #10B981" }} />
             API Live • Last Sync: {lastUpdated.toLocaleTimeString()}
           </div>
         </div>
@@ -1052,25 +825,13 @@ function App() {
             {isDark ? "☀️ Light Mode" : "🌙 Dark Mode"}
           </button>
           <div className="ui-zoom-controls">
-            <button onClick={() => setZoomAction("in")} title="Zoom In">
-              +
-            </button>
-            <button onClick={() => setZoomAction("out")} title="Zoom Out">
-              −
-            </button>
+            <button onClick={() => setZoomAction("in")} title="Zoom In">+</button>
+            <button onClick={() => setZoomAction("out")} title="Zoom Out">−</button>
           </div>
         </div>
 
         {selectedItem && (
-          <div
-            className="ui-info-card fade-in"
-            style={{
-              background: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.9)",
-              padding: "15px",
-              borderRadius: "8px",
-              marginTop: "10px",
-            }}
-          >
+          <div className="ui-info-card fade-in" style={{ background: isDark ? "rgba(30,41,59,0.9)" : "rgba(255,255,255,0.9)", padding: "15px", borderRadius: "8px", marginTop: "20px" }}>
             <div className="card-header" style={{ fontSize: "12px", opacity: 0.7 }}>
               {selectedItem.size ? "Container Details" : "Selected Yard Slot"}
             </div>
@@ -1078,40 +839,24 @@ function App() {
             <div className="card-detail" style={{ fontSize: "14px" }}>
               {selectedItem.size ? (
                 <>
-                  <div style={{ marginBottom: "4px" }}>
-                    Size: <strong>{selectedItem.originalData?.CTR_SIZE} FT</strong>
-                  </div>
-                  <div style={{ marginBottom: "4px" }}>
-                    Location: <strong>{selectedItem._rawKey || selectedItem.loc}</strong>
-                  </div>
-                  <div style={{ marginBottom: "4px" }}>
-                    Load Status: <strong>{selectedItem.originalData?.LDD_MT_FLG === "E" ? "Empty" : "Loaded"}</strong>
-                  </div>
-                  <div style={{ marginBottom: "4px" }}>
-                    Stack Level: <strong>
-                      {selectedItem.stack} ({selectedItem.originalData?.HEIGHT})
-                    </strong>
-                  </div>
-                  <div style={{ marginBottom: "4px" }}>
-                    Shipping Line: <strong>{selectedItem.originalData?.SLINE_CD}</strong>
-                  </div>
+                  <div style={{ marginBottom: "4px" }}>Size: <strong>{selectedItem.originalData?.CTR_SIZE} FT</strong></div>
+                  <div style={{ marginBottom: "4px" }}>Location: <strong>{selectedItem._rawKey || selectedItem.loc}</strong></div>
+                  <div style={{ marginBottom: "4px" }}>Load Status: <strong>{selectedItem.originalData?.LDD_MT_FLG === "E" ? "Empty" : "Loaded"}</strong></div>
+                  <div style={{ marginBottom: "4px" }}>Stack Level: <strong>{selectedItem.stack} ({selectedItem.originalData?.HEIGHT})</strong></div>
+                  <div style={{ marginBottom: "4px" }}>Shipping Line: <strong>{selectedItem.originalData?.SLINE_CD}</strong></div>
                 </>
               ) : (
-                <div>
-                  Path Vertices: <strong>{selectedItem.polygon?.length}</strong>
-                </div>
+                <div>Path Vertices: <strong>{selectedItem.polygon?.length}</strong></div>
               )}
             </div>
           </div>
         )}
       </div>
 
-      {/* ─── 3D Scene ─── */}
       <Canvas camera={{ position: [0, 400, 400], fov: 45 }} shadows>
         <color attach="background" args={[isDark ? "#0f172a" : "#e2e8f0"]} />
         <CameraZoomHandler zoomAction={zoomAction} setZoomAction={setZoomAction} />
 
-        {/* Improved lighting */}
         <ambientLight intensity={0.6} />
         <hemisphereLight skyColor={isDark ? "#1a3a5a" : "#add8e6"} groundColor="#3a3a3a" intensity={0.4} />
         <directionalLight position={[100, 300, 100]} intensity={1.2} castShadow shadow-mapSize={[2048, 2048]} />
@@ -1123,30 +868,22 @@ function App() {
           <meshStandardMaterial color={isDark ? "#1e293b" : "#f0f2f5"} roughness={1} />
         </mesh>
 
-        <MapControls
-          enableDamping={true}
-          dampingFactor={0.05}
-          maxPolarAngle={Math.PI / 2 - 0.05}
-          minDistance={20}
-          maxDistance={1500}
-        />
+        <MapControls enableDamping={true} dampingFactor={0.05} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={20} maxDistance={1500} />
 
         {/* Head Office */}
         <HeadOffice3D center={center} isDark={isDark} />
 
-        {/* Slots (ground polygons) */}
+        {/* NEW: In-Gate Plaza */}
+        <InGate3D center={center} isDark={isDark} />
+
+        {/* Slots */}
         {slots.map((slot, idx) => (
           <Slot3D key={`slot-${idx}`} slot={slot} center={center} isDark={isDark} onClick={setSelectedItem} />
         ))}
 
-        {/* Containers - now with colors and textures */}
+        {/* Containers */}
         {placedContainers.map((container, idx) => (
-          <Container3D
-            key={`container-${container.id}-${idx}`}
-            data={container}
-            isDark={isDark}
-            onClick={setSelectedItem}
-          />
+          <Container3D key={`container-${container.id}-${idx}`} data={container} isDark={isDark} onClick={setSelectedItem} />
         ))}
 
         {/* Warehouses */}
@@ -1158,35 +895,18 @@ function App() {
         {useMemo(() => {
           const lngScale = Math.cos((center.lat * Math.PI) / 180);
           const pts = TRACK_COORDS.map((c) => ({
-            x: (c[1] - center.lng) * LAT_TO_METERS * lngScale,
-            z: -(c[0] - center.lat) * LAT_TO_METERS,
+            x: (c[1] - center.lng) * LAT_TO_METERS * lngScale, z: -(c[0] - center.lat) * LAT_TO_METERS,
           }));
           return pts.slice(0, -1).map((p1, i) => {
             const p2 = pts[i + 1];
             const len = Math.sqrt((p2.x - p1.x) ** 2 + (p2.z - p1.z) ** 2);
-            return (
-              <TrackSegment
-                key={i}
-                cx={(p1.x + p2.x) / 2}
-                cz={(p1.z + p2.z) / 2}
-                len={len}
-                angle={Math.atan2(p2.x - p1.x, p2.z - p1.z)}
-                isDark={isDark}
-              />
-            );
+            return <TrackSegment key={i} cx={(p1.x + p2.x) / 2} cz={(p1.z + p2.z) / 2} len={len} angle={Math.atan2(p2.x - p1.x, p2.z - p1.z)} isDark={isDark} />;
           });
         }, [center, isDark])}
 
         {/* Cranes */}
         {CRANE_COORDS.map((crane, idx) => (
-          <Crane3D
-            key={`crane-${idx}`}
-            lat={crane.lat}
-            lng={crane.lng}
-            type={crane.type}
-            center={center}
-            isDark={isDark}
-          />
+          <Crane3D key={`crane-${idx}`} lat={crane.lat} lng={crane.lng} type={crane.type} center={center} isDark={isDark} />
         ))}
       </Canvas>
     </div>
