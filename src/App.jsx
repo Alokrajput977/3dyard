@@ -1,6 +1,6 @@
 // App.jsx
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { MapControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import "./App.css";
@@ -108,9 +108,93 @@ const CRANE_COORDS = [
 ];
 
 // ─────────────────────────────────────────────────────────────
-//  🔑 CORE: Format slot ID with 3‑digit padding
-//  "S1:6:1"  →  "S1:006:001"
-//  "S1:40:2" →  "S1:040:002"
+//  🎨 Container color mapping based on shipping line (SLINE_CD)
+// ─────────────────────────────────────────────────────────────
+const SHIPPING_LINE_COLORS = {
+  GSA: "#EF4444", // red
+  ACC: "#3B82F6", // blue
+  ESS: "#22C55E", // green
+  MAI: "#F97316", // orange
+  HLC: "#8B5CF6", // purple
+  OOCL: "#F59E0B", // amber
+  MSC: "#10B981", // emerald
+  CMA: "#EC4899", // pink
+  COSCO: "#6366F1", // indigo
+  EVER: "#14B8A6", // teal
+  HMM: "#F43F5E", // rose
+  ONE: "#8B5CF6", // violet
+  YML: "#F97316", // orange
+  ZIM: "#3B82F6", // blue
+  PIL: "#22C55E", // green
+  SITC: "#EF4444", // red
+  default: "#EF4444", // gray
+};
+
+function getContainerColor(container) {
+  const line = container.originalData?.SLINE_CD?.trim() || "";
+  return SHIPPING_LINE_COLORS[line] || SHIPPING_LINE_COLORS.default;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  🖼️ Generate a corrugated container texture using canvas
+// ─────────────────────────────────────────────────────────────
+function createContainerTexture(baseColor, isDark) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+
+  // Fill background
+  const color = new THREE.Color(baseColor);
+  ctx.fillStyle = color.getStyle();
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Darken for shadow effect
+  const darkColor = color.clone().multiplyScalar(0.7);
+  ctx.fillStyle = darkColor.getStyle();
+
+  // Draw vertical corrugation lines
+  const spacing = 12;
+  for (let x = 0; x < 512; x += spacing) {
+    ctx.fillRect(x, 0, 2, 512);
+  }
+
+  // Add horizontal bands at top and bottom (like container frames)
+  ctx.fillStyle = darkColor.getStyle();
+  ctx.fillRect(0, 0, 512, 30);
+  ctx.fillRect(0, 482, 512, 30);
+
+  // Add a subtle door outline on the right side (simulate container doors)
+  ctx.strokeStyle = darkColor.getStyle();
+  ctx.lineWidth = 4;
+  ctx.strokeRect(380, 50, 120, 412);
+
+  // Add some rivets (small circles)
+  ctx.fillStyle = darkColor.getStyle();
+  for (let y = 60; y < 450; y += 40) {
+    ctx.beginPath();
+    ctx.arc(390, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(490, y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Add a stripe at the bottom (like container marking)
+  ctx.fillStyle = "#FFFFFF";
+  ctx.globalAlpha = 0.3;
+  ctx.fillRect(50, 460, 200, 20);
+  ctx.globalAlpha = 1.0;
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(1, 1);
+  return texture;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  🔑 Format slot ID
 // ─────────────────────────────────────────────────────────────
 function formatSlotId(rawId) {
   if (!rawId) return rawId;
@@ -175,28 +259,47 @@ const geo20ft = new THREE.BoxGeometry(6.1, 2.6, 2.4);
 const edges40ft = new THREE.EdgesGeometry(geo40ft);
 const edges20ft = new THREE.EdgesGeometry(geo20ft);
 
-const matBaseLight = new THREE.MeshStandardMaterial({ color: "#9CA3AF", roughness: 0.6, metalness: 0.4 });
-const matHoverLight = new THREE.MeshStandardMaterial({ color: "#D1D5DB", roughness: 0.6, metalness: 0.4 });
-const matBaseDark = new THREE.MeshStandardMaterial({ color: "#6B7280", roughness: 0.6, metalness: 0.4 });
-const matHoverDark = new THREE.MeshStandardMaterial({ color: "#9CA3AF", roughness: 0.6, metalness: 0.4 });
-const edgeMatLight = new THREE.LineBasicMaterial({ color: "#4B5563" });
-const edgeMatDark = new THREE.LineBasicMaterial({ color: "#374151" });
-
 // ─────────────────────────────────────────────────────────────
-//  🧱 Container3D component
+//  🧱 Container3D component with color and texture
 // ─────────────────────────────────────────────────────────────
 const Container3D = React.memo(({ data, isDark, onClick }) => {
   const [hovered, setHovered] = useState(false);
   const geometry = data.is40 ? geo40ft : geo20ft;
   const edgeGeo = data.is40 ? edges40ft : edges20ft;
-  const material = isDark
-    ? hovered
-      ? matHoverDark
-      : matBaseDark
-    : hovered
-    ? matHoverLight
-    : matBaseLight;
-  const edgeMaterial = isDark ? edgeMatDark : edgeMatLight;
+
+  // Get color for this container
+  const color = getContainerColor(data);
+  // Create texture (memoized per color + dark mode)
+  const texture = useMemo(() => createContainerTexture(color, isDark), [color, isDark]);
+
+  // Material with texture
+  const material = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.5,
+      metalness: 0.3,
+      color: new THREE.Color(color),
+    });
+  }, [texture, color]);
+
+  // Hover material override (slightly lighter)
+  const hoverMaterial = useMemo(() => {
+    const c = new THREE.Color(color);
+    c.lerp(new THREE.Color(0xffffff), 0.3);
+    return new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.3,
+      metalness: 0.2,
+      color: c,
+    });
+  }, [texture, color]);
+
+  const currentMaterial = hovered ? hoverMaterial : material;
+
+  // Edge material
+  const edgeMaterial = useMemo(() => {
+    return new THREE.LineBasicMaterial({ color: isDark ? "#4B5563" : "#374151" });
+  }, [isDark]);
 
   return (
     <mesh
@@ -219,7 +322,7 @@ const Container3D = React.memo(({ data, isDark, onClick }) => {
         onClick(data);
       }}
       geometry={geometry}
-      material={material}
+      material={currentMaterial}
     >
       <lineSegments geometry={edgeGeo} material={edgeMaterial} />
     </mesh>
@@ -227,7 +330,7 @@ const Container3D = React.memo(({ data, isDark, onClick }) => {
 });
 
 // ─────────────────────────────────────────────────────────────
-//  🏗️ Crane3D component
+//  🏗️ Crane3D component (unchanged)
 // ─────────────────────────────────────────────────────────────
 const Crane3D = ({ lat, lng, type, center, isDark }) => {
   const lngScale = Math.cos((center.lat * Math.PI) / 200);
@@ -293,7 +396,7 @@ const Crane3D = ({ lat, lng, type, center, isDark }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  🛤️ TrackSegment
+//  🛤️ TrackSegment (unchanged)
 // ─────────────────────────────────────────────────────────────
 const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
   const trackCenters = [-6, -2, 2, 6];
@@ -362,7 +465,7 @@ const TrackSegment = ({ cx, cz, len, angle, isDark }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  🧱 WallDecorations
+//  🧱 WallDecorations (unchanged)
 // ─────────────────────────────────────────────────────────────
 const WallDecorations = ({ segment }) => {
   const { midX, midZ, nx, nz, len } = segment;
@@ -418,7 +521,7 @@ const WallDecorations = ({ segment }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  🏭 Warehouse3D
+//  🏭 Warehouse3D (unchanged)
 // ─────────────────────────────────────────────────────────────
 const Warehouse3D = ({ data, center, isDark }) => {
   const [hovered, setHovered] = useState(false);
@@ -506,7 +609,7 @@ const Warehouse3D = ({ data, center, isDark }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  🏢 OfficeWallDecorations
+//  🏢 OfficeWallDecorations (unchanged)
 // ─────────────────────────────────────────────────────────────
 const OfficeWallDecorations = ({ segment, isDark }) => {
   const { midX, midZ, nx, nz, len } = segment;
@@ -588,7 +691,7 @@ const OfficeWallDecorations = ({ segment, isDark }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  📡 NetworkTower
+//  📡 NetworkTower (unchanged)
 // ─────────────────────────────────────────────────────────────
 const NetworkTower = ({ cx, cz }) => (
   <group position={[cx, 16, cz]}>
@@ -612,7 +715,7 @@ const NetworkTower = ({ cx, cz }) => (
 );
 
 // ─────────────────────────────────────────────────────────────
-//  🏢 HeadOffice3D
+//  🏢 HeadOffice3D (unchanged)
 // ─────────────────────────────────────────────────────────────
 const HeadOffice3D = ({ center, isDark }) => {
   const [hovered, setHovered] = useState(false);
@@ -718,7 +821,7 @@ const HeadOffice3D = ({ center, isDark }) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-//  🟫 Slot3D (ground polygon)
+//  🟫 Slot3D (unchanged)
 // ─────────────────────────────────────────────────────────────
 const Slot3D = ({ slot, center, isDark, onClick }) => {
   const [hovered, setHovered] = useState(false);
@@ -788,7 +891,6 @@ function App() {
         setSlots(validSlots);
 
         // ─── Map containers ──────────────────────────
-        // Build a full slot ID from STK_ID + ROW_NO + COLUMN_NO
         const mappedContainers = Array.isArray(containersDataArray)
           ? containersDataArray
               .filter((item) => item.STK_ID && item.ROW_NO !== undefined && item.COLUMN_NO !== undefined)
@@ -1009,13 +1111,16 @@ function App() {
         <color attach="background" args={[isDark ? "#0f172a" : "#e2e8f0"]} />
         <CameraZoomHandler zoomAction={zoomAction} setZoomAction={setZoomAction} />
 
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[100, 300, 100]} intensity={1} castShadow shadow-mapSize={[2048, 2048]} />
-        <directionalLight position={[-100, 100, -100]} intensity={0.3} />
+        {/* Improved lighting */}
+        <ambientLight intensity={0.6} />
+        <hemisphereLight skyColor={isDark ? "#1a3a5a" : "#add8e6"} groundColor="#3a3a3a" intensity={0.4} />
+        <directionalLight position={[100, 300, 100]} intensity={1.2} castShadow shadow-mapSize={[2048, 2048]} />
+        <directionalLight position={[-100, 100, -100]} intensity={0.5} />
+        <pointLight position={[0, 200, 0]} intensity={0.3} />
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
           <planeGeometry args={[10000, 10000]} />
-          <meshStandardMaterial color={isDark ? "#1e293b" : "#ffffff"} roughness={1} />
+          <meshStandardMaterial color={isDark ? "#1e293b" : "#f0f2f5"} roughness={1} />
         </mesh>
 
         <MapControls
@@ -1034,7 +1139,7 @@ function App() {
           <Slot3D key={`slot-${idx}`} slot={slot} center={center} isDark={isDark} onClick={setSelectedItem} />
         ))}
 
-        {/* Containers */}
+        {/* Containers - now with colors and textures */}
         {placedContainers.map((container, idx) => (
           <Container3D
             key={`container-${container.id}-${idx}`}
