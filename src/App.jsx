@@ -10,69 +10,20 @@ const API_POLL_INTERVAL = 5000;
 
 // --- Boundary Wall Coordinates ---
 const BOUNDARY_WALL_COORDS = [
-  [28.509232156091905, 77.28673914153669],
-  [28.507338363972515, 77.28681925162508],
-  [28.507388828969987, 77.28606886193224],
-  [28.50887879022288, 77.2859366508579],
-  [28.51513425216102, 77.28564939396986],
-  [28.516105514074273, 77.28547565477994],
-  [28.516569229877188, 77.28572424373732],
-  [28.519108244303233, 77.28737110435144],
-  [28.518904866086185, 77.28783919110512],
-  [28.51575709433006, 77.2879127514761],
-  [28.513909516566425, 77.28816611690752],
-  [28.512519973456563, 77.28917375412553],
-  [28.511527065899788, 77.2916025673494],
-  [28.511463318732737, 77.29165396139055],
-  [28.50789733914065, 77.29234998557078],
-  [28.507746261322207, 77.29159098816812],
-  [28.508096634293402, 77.29150477910063],
-  [28.507860108269256, 77.2895383393366],
-  [28.50753021124347, 77.28907320258013],   // Start of Out-Gate gap
-  [28.507735618945745, 77.2888276481522],   // End of Out-Gate gap
-  [28.507837285240317, 77.28887014795086],
-  [28.508468029022872, 77.28865764891665],
-  [28.50848670230088, 77.28872612082445],   // Start of In-Gate gap
-  [28.508866391577477, 77.28877806502395],   // End of In-Gate gap
-  [28.5093041736862, 77.28877806502247],
-  [28.509233630723408, 77.28674043541311],
+  [28.509232156091905, 77.28673914153669], [28.507338363972515, 77.28681925162508], [28.507388828969987, 77.28606886193224], [28.50887879022288, 77.2859366508579], [28.51513425216102, 77.28564939396986], [28.516105514074273, 77.28547565477994], [28.516569229877188, 77.28572424373732], [28.519108244303233, 77.28737110435144], [28.518904866086185, 77.28783919110512], [28.51575709433006, 77.2879127514761], [28.513909516566425, 77.28816611690752], [28.512519973456563, 77.28917375412553], [28.511527065899788, 77.2916025673494], [28.511463318732737, 77.29165396139055], [28.50789733914065, 77.29234998557078], [28.507746261322207, 77.29159098816812], [28.508096634293402, 77.29150477910063], [28.507860108269256, 77.2895383393366], [28.50753021124347, 77.28907320258013], [28.507735618945745, 77.2888276481522], [28.507837285240317, 77.28887014795086], [28.508468029022872, 77.28865764891665], [28.50848670230088, 77.28872612082445], [28.508866391577477, 77.28877806502395], [28.5093041736862, 77.28877806502247], [28.509233630723408, 77.28674043541311],
 ];
 
-// --- In-Gate Coordinates ---
-const INGATE_POLYGON = [
-  [28.508862180540508, 77.2887146535867],
-  [28.508862180540508, 77.28884621675807],
-  [28.508489551776456, 77.28886578813892],
-  [28.508504839136275, 77.28873313766863]
-];
+// --- Sub-Areas ---
+const INGATE_POLYGON = [[28.508862180540508, 77.2887146535867], [28.508862180540508, 77.28884621675807], [28.508489551776456, 77.28886578813892], [28.508504839136275, 77.28873313766863]];
+const OUTGATE_POLYGON = [[28.507732029353566, 77.2888193076692], [28.507533460460987, 77.28906833200674], [28.507458085232486, 77.28903697338644], [28.50768988415047, 77.28876396892754]];
+const PARKING_COORDS = [[28.50889491841472, 77.28870920718118], [28.508913326434662, 77.28874674032724], [28.509292656765698, 77.28875681637923], [28.509269676368607, 77.28798769296093], [28.508928505264922, 77.28800848008274], [28.508698700275726, 77.28802926720272], [28.50872698399292, 77.28818751752696], [28.50880240720342, 77.28841215252098], [28.50884247576206, 77.28858984885952]];
+const PATH_COORDS = [[28.508613232602404, 77.28774371246273], [28.5086270610609, 77.28778435853398], [28.509216304021855, 77.28774278429589], [28.509213947056594, 77.28769919840154]];
+const CANTEEN_COORDS = [[28.508915790523016, 77.28776625363527], [28.5090006414807, 77.28775016038163], [28.509051905566967, 77.28773943154609], [28.50908843857876, 77.28774010209831]];
 
-// --- Out-Gate Coordinates ---
-const OUTGATE_POLYGON = [
-  [28.507732029353566, 77.2888193076692],
-  [28.507533460460987, 77.28906833200674],
-  [28.507458085232486, 77.28903697338644],
-  [28.50768988415047, 77.28876396892754]
-];
-
-// --- Parking Area Coordinates ---
-const PARKING_COORDS = [
-  [28.50889491841472, 77.28870920718118],
-  [28.508913326434662, 77.28874674032724],
-  [28.509292656765698, 77.28875681637923],
-  [28.509269676368607, 77.28798769296093],
-  [28.508928505264922, 77.28800848008274],
-  [28.508698700275726, 77.28802926720272],
-  [28.50872698399292, 77.28818751752696],
-  [28.50880240720342, 77.28841215252098],
-  [28.50884247576206, 77.28858984885952]
-];
-
-// --- Head Office Coordinates ---
 const HEAD_OFFICE_POLYGON = [
   [28.50921721347462, 77.2876475691699], [28.509125822340106, 77.28766336700072], [28.509129292890968, 77.28761334053647], [28.509039058531517, 77.28761860648007], [28.509036744828975, 77.28754751624142], [28.508996255026346, 77.2875448832696], [28.508995098174594, 77.28756989650174], [28.508910647963845, 77.28757252947354], [28.508902549994893, 77.28748432491817], [28.50884470734014, 77.28748300843061], [28.508676963465497, 77.28731844769297], [28.508670022332243, 77.28724209150724], [28.50859714042292, 77.28723945853544], [28.508587885573693, 77.28714467155055], [28.508600610991166, 77.28709727805813], [28.508543925028732, 77.28709332860042], [28.508541611315344, 77.28699854161553], [28.50849070960772, 77.28699590864375], [28.508488395893163, 77.28689453922934], [28.50902401946127, 77.28687215896902], [28.509030960569564, 77.28697616135523], [28.508850491605273, 77.28698406027061], [28.50885743272499, 77.28722497719053], [28.508907177402953, 77.28726973771117], [28.509207958676942, 77.28725788933805],
 ];
 
-// --- 4 Warehouses ---
 const WAREHOUSE_DATA = [
   { id: "Warehouse 1", polygon: [[28.51143341203824, 77.29014792543707], [28.511447553531475, 77.29061060646951], [28.50887469321554, 77.29073212892841], [28.50886142486985, 77.29025147014725], [28.51143341203824, 77.29014792543707]] },
   { id: "Warehouse 2", polygon: [[28.51112807640633, 77.28930776832516], [28.51114576715341, 77.2897859105682], [28.50960493713407, 77.28986465016293], [28.509580039693272, 77.28937354130709], [28.51112807640633, 77.28930776832516]] },
@@ -80,20 +31,27 @@ const WAREHOUSE_DATA = [
   { id: "Warehouse 4", polygon: [[28.516129077394567, 77.28667217921567], [28.51617385678954, 77.28779736584238], [28.51584625972401, 77.28780541246903], [28.515805015417023, 77.28667754363342], [28.516129077394567, 77.28667217921567]] },
 ];
 
-// --- Railway Track ---
 const TRACK_COORDS = [
   [28.50798029741757, 77.2861993278382], [28.511441251081667, 77.28608144845934], [28.513226522607233, 77.28598437130985], [28.514676652635337, 77.28588036009819], [28.516528890591463, 77.28581795337986],
   [28.517899769428844, 77.28680259289459], [28.519014737755104, 77.28747519872812], [28.52097656595973, 77.28848757455816], [28.5227129362258, 77.28815473873708], [28.520793788465724, 77.28893135584076], [28.51889897656675, 77.28863319036364], [28.516778696540648, 77.28838356336682],
 ];
 
-// --- Cranes ---
 const CRANE_COORDS = [
   { lat: 28.508020512511646, lng: 77.28626664099272, type: "yellow" }, { lat: 28.51023423558485, lng: 77.2861962934262, type: "orange" }, { lat: 28.510471828319627, lng: 77.28618627929005, type: "orange" }, { lat: 28.513893598879548, lng: 77.2870393486428, type: "yellow" }, { lat: 28.513437787133046, lng: 77.28773232686511, type: "orange" }, { lat: 28.510418860042552, lng: 77.28848155898685, type: "yellow" },
 ];
 
+// --- NEW: Reach Stacker (RST) Coordinates ---
+const RST_MACHINES = [
+  { lat: 28.513710971678258, lng:  77.2871341926275, angle: Math.PI / 1 },
+  { lat: 28.50950981669418, lng: 77.28775043401356, angle: -Math.PI / 3 },
+   { lat: 28.509407382748716, lng: 77.28917767667743, angle: -Math.PI / 9 }, 
+    { lat:   28.51173323962677, lng:  77.29054777363444, angle: -Math.PI / 5},
+    { lat: 28.51309880145435, lng:  77.28823378159592, angle: -Math.PI / 9 }, 
+];
+
 
 // ─────────────────────────────────────────────────────────────
-//  🎨 Container & Texture Helpers
+//  🎨 Utility & Texture Helpers
 // ─────────────────────────────────────────────────────────────
 const SHIPPING_LINE_COLORS = {
   GSA: "#EF4444", ACC: "#3B82F6", ESS: "#22C55E", MAI: "#F97316",
@@ -138,41 +96,30 @@ function createContainerTexture(baseColor, isDark) {
   return texture;
 }
 
-// ─────────────────────────────────────────────────────────────
-//  🚧 Warning Stripes Generator (For Parking Barriers)
-// ─────────────────────────────────────────────────────────────
 function createWarningStripeTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = 512; canvas.height = 512;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "#FACC15"; // Industrial Yellow
+  ctx.fillStyle = "#FACC15"; 
   ctx.fillRect(0, 0, 512, 512);
-
-  ctx.fillStyle = "#111827"; // Deep Black
+  ctx.fillStyle = "#111827"; 
   ctx.beginPath();
-  // Draw thick diagonal lines
   for (let i = -512; i < 1024; i += 128) {
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i + 64, 0);
-    ctx.lineTo(i + 64 - 512, 512);
-    ctx.lineTo(i - 512, 512);
+    ctx.moveTo(i, 0); ctx.lineTo(i + 64, 0); ctx.lineTo(i + 64 - 512, 512); ctx.lineTo(i - 512, 512);
   }
   ctx.fill();
 
   const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(2, 1);
+  texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(2, 1);
   return texture;
 }
 
-// Math Utility: Point in Polygon Check (Ray Casting)
 function isPointInPolygon(point, vs) {
   let x = point[0], z = point[1];
   let inside = false;
   for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-    let xi = vs[i][0], zi = vs[i][1];
-    let xj = vs[j][0], zj = vs[j][1];
+    let xi = vs[i][0], zi = vs[i][1]; let xj = vs[j][0], zj = vs[j][1];
     let intersect = ((zi > z) != (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi);
     if (intersect) inside = !inside;
   }
@@ -208,6 +155,152 @@ const CameraZoomHandler = ({ zoomAction, setZoomAction }) => {
   return null;
 };
 
+// ─────────────────────────────────────────────────────────────
+//  🏗️ Reach Stacker (RST Machine) Component
+// ─────────────────────────────────────────────────────────────
+const ReachStacker3D = ({ lat, lng, angle, center, isDark }) => {
+  const [hovered, setHovered] = useState(false);
+
+  // Math translation for coordinates
+  const lngScale = Math.cos((center.lat * Math.PI) / 180);
+  const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
+  const z = -(lat - center.lat) * LAT_TO_METERS;
+
+  // Custom RST Colors
+  const bodyColor = "#FACC15"; // Industrial Yellow
+  const armColor = "#EA580C"; // Heavy Orange
+  const wheelColor = "#111827"; // Rubber Black
+  const glassColor = "#38BDF8"; // Cabin Glass
+  const metalColor = isDark ? "#374151" : "#4B5563";
+
+  return (
+    <group
+      position={[x, 0, z]}
+      rotation={[0, angle, 0]}
+      onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
+      onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
+    >
+      {/* 1. Main Heavy Chassis */}
+      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+        <boxGeometry args={[3.5, 1.5, 8]} />
+        <meshStandardMaterial color={bodyColor} roughness={0.6} metalness={0.2} />
+      </mesh>
+
+      {/* 2. Front & Rear Wheels (Heavy Duty) */}
+      <mesh position={[-2, 1, 3]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[1, 1, 0.8, 16]} /><meshStandardMaterial color={wheelColor} roughness={0.9} /></mesh>
+      <mesh position={[2, 1, 3]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[1, 1, 0.8, 16]} /><meshStandardMaterial color={wheelColor} roughness={0.9} /></mesh>
+      <mesh position={[-2, 1, -3]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[1, 1, 0.8, 16]} /><meshStandardMaterial color={wheelColor} roughness={0.9} /></mesh>
+      <mesh position={[2, 1, -3]} rotation={[0, 0, Math.PI / 2]} castShadow><cylinderGeometry args={[1, 1, 0.8, 16]} /><meshStandardMaterial color={wheelColor} roughness={0.9} /></mesh>
+
+      {/* 3. Driver Cabin */}
+      <mesh position={[0, 3.1, -1.5]} castShadow>
+        <boxGeometry args={[2.5, 1.8, 2]} />
+        <meshStandardMaterial color={glassColor} transparent opacity={0.7} metalness={0.8} />
+      </mesh>
+
+      {/* 4. Hydraulic Arm Base */}
+      <mesh position={[0, 2.5, -3.5]} castShadow>
+         <boxGeometry args={[1.5, 1.5, 2]} />
+         <meshStandardMaterial color={metalColor} />
+      </mesh>
+
+      {/* 5. Telescopic Orange Boom Arm */}
+      <mesh position={[0, 4.8, 1.5]} rotation={[-Math.PI / 6.5, 0, 0]} castShadow>
+        <boxGeometry args={[1.2, 1.2, 10]} />
+        <meshStandardMaterial color={armColor} roughness={0.5} metalness={0.3} />
+      </mesh>
+      <mesh position={[0, 7, 5.5]} rotation={[-Math.PI / 6.5, 0, 0]} castShadow>
+        <boxGeometry args={[0.8, 0.8, 4]} />
+        <meshStandardMaterial color={metalColor} />
+      </mesh>
+
+      {/* 6. Top Spreader (Container Grabber) */}
+      <mesh position={[0, 7.3, 7.5]} castShadow>
+        <boxGeometry args={[6.1, 0.4, 1.5]} />
+        <meshStandardMaterial color={wheelColor} />
+      </mesh>
+      {/* Spreader Latches */}
+      <mesh position={[-2.9, 6.8, 7.5]} castShadow><boxGeometry args={[0.2, 1, 0.4]} /><meshStandardMaterial color={wheelColor} /></mesh>
+      <mesh position={[2.9, 6.8, 7.5]} castShadow><boxGeometry args={[0.2, 1, 0.4]} /><meshStandardMaterial color={wheelColor} /></mesh>
+
+      {/* Hover Tooltip */}
+      {hovered && (
+        <Html position={[0, 10, 0]} center style={{ pointerEvents: "none" }}>
+          <div className={`tooltip-3d ${isDark ? "dark" : "light"}`} style={{ fontWeight: "bold", fontSize: "14px", background: "#EA580C", color: "#fff", border: "2px solid #fff", padding: "6px 12px", borderRadius: "4px", boxShadow: "0 4px 6px rgba(0,0,0,0.3)" }}>
+            RST Machine (Reach Stacker)
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────
+//  🏗️ Path & Canteen Components (Restored)
+// ─────────────────────────────────────────────────────────────
+const PathArea3D = ({ center }) => {
+  const shape = useMemo(() => {
+    const s = new THREE.Shape();
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+    PATH_COORDS.forEach(([lat, lng], i) => {
+      const x = (lng - center.lng) * LAT_TO_METERS * lngScale;
+      const z = -(lat - center.lat) * LAT_TO_METERS;
+      if (i === 0) s.moveTo(x, z); else s.lineTo(x, z);
+    });
+    return s;
+  }, [center]);
+
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+      <shapeGeometry args={[shape]} />
+      <meshStandardMaterial color="#3F3F46" roughness={0.8} />
+    </mesh>
+  );
+};
+
+const Canteen3D = ({ center }) => {
+  const pillarColor = "#334155";
+  const roofColor = "#1E293B";
+
+  const { shape, points } = useMemo(() => {
+    const s = new THREE.Shape();
+    const lngScale = Math.cos((center.lat * Math.PI) / 180);
+    const pts = CANTEEN_COORDS.map(([lat, lng]) => [
+        (lng - center.lng) * LAT_TO_METERS * lngScale,
+        -(lat - center.lat) * LAT_TO_METERS
+    ]);
+    pts.forEach(([x, z], i) => {
+        if(i === 0) s.moveTo(x, z); else s.lineTo(x, z);
+    });
+    return { shape: s, points: pts };
+  }, [center]);
+
+  return (
+    <group>
+      {/* Iron Pillars */}
+      {points.map((p, i) => (
+        <mesh key={i} position={[p[0], 2.25, p[1]]} castShadow>
+          <cylinderGeometry args={[0.15, 0.15, 4.5, 12]} />
+          <meshStandardMaterial color={pillarColor} metalness={0.8} roughness={0.2} />
+        </mesh>
+      ))}
+      {/* Roof */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 4.5, 0]} castShadow>
+        <shapeGeometry args={[shape]} />
+        <meshStandardMaterial color={roofColor} roughness={0.4} />
+      </mesh>
+      {/* Label */}
+      <Html position={[points[0][0], 6, points[0][1]]} center>
+         <div style={{ background: "#FACC15", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>Canteen Area</div>
+      </Html>
+    </group>
+  );
+};
+
+
+// ─────────────────────────────────────────────────────────────
+//  Parking Area 3D
+// ─────────────────────────────────────────────────────────────
 const ParkingArea3D = ({ center, isDark }) => {
   const [hovered, setHovered] = useState(false);
   const stripeTexture = useMemo(() => createWarningStripeTexture(), []);
@@ -232,7 +325,6 @@ const ParkingArea3D = ({ center, isDark }) => {
 
     cx /= pts.length; cz /= pts.length;
 
-    // 1. Calculate Yellow & Black Jersey Barriers for perimeter
     const bItems = [];
     const barrierLength = 1.8;
     for (let i = 0; i < pts.length; i++) {
@@ -250,13 +342,12 @@ const ParkingArea3D = ({ center, isDark }) => {
       }
     }
 
-    // 2. Calculate Internal White Parking Lines
     const pLines = [];
     const spotWidth = 2.6;
     const spotLength = 5.0;
 
     for (let x = minX; x < maxX; x += spotWidth) {
-      for (let z = minZ; z < maxZ; z += spotLength * 1.5) { // Adding gap between rows
+      for (let z = minZ; z < maxZ; z += spotLength * 1.5) {
          const spotCx = x + spotWidth/2;
          const spotCz = z + spotLength/2;
          if(isPointInPolygon([spotCx, spotCz], pts)) {
@@ -273,30 +364,22 @@ const ParkingArea3D = ({ center, isDark }) => {
       onPointerOver={(e) => { e.stopPropagation(); setHovered(true); document.body.style.cursor = "pointer"; }}
       onPointerOut={(e) => { e.stopPropagation(); setHovered(false); document.body.style.cursor = "auto"; }}
     >
-      {/* Concrete Ground Surface */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]} receiveShadow>
         <shapeGeometry args={[shape]} />
         <meshStandardMaterial color={isDark ? "#3F3F46" : "#71717A"} roughness={0.9} />
       </mesh>
-
-      {/* Internal White Parking Markings */}
       {parkingLines.map((spot, i) => (
         <group key={`parking-spot-${i}`} position={[spot.x, 0.06, spot.z]}>
-          {/* Left Line */}
           <mesh position={[-1.25, 0, 0]}><boxGeometry args={[0.1, 0.02, 5]} /><meshBasicMaterial color="#FFFFFF" /></mesh>
-          {/* Top Line */}
           <mesh position={[0, 0, -2.5]}><boxGeometry args={[2.6, 0.02, 0.1]} /><meshBasicMaterial color="#FFFFFF" /></mesh>
         </group>
       ))}
-
-      {/* Perimeter Yellow/Black Jersey Barriers */}
       {barriers.map((b, i) => (
         <mesh key={`barrier-${i}`} position={[b.x, 0.5, b.z]} rotation={[0, -b.angle, 0]} castShadow receiveShadow>
            <boxGeometry args={[1.7, 1, 0.6]} />
            <meshStandardMaterial map={stripeTexture} roughness={0.8} />
         </mesh>
       ))}
-
       {hovered && (
         <Html position={[bounds.minX + (bounds.maxX - bounds.minX)/2, 5, bounds.minZ + (bounds.maxZ - bounds.minZ)/2]} center style={{ pointerEvents: "none" }}>
           <div className={`tooltip-3d ${isDark ? "dark" : "light"}`} style={{ fontWeight: "bold", fontSize: "14px", background: "#FACC15", color: "#111827", border: "2px solid #111827", padding: "6px 12px", borderRadius: "4px", boxShadow: "0 4px 6px rgba(0,0,0,0.3)" }}>
@@ -310,7 +393,7 @@ const ParkingArea3D = ({ center, isDark }) => {
 
 
 // ─────────────────────────────────────────────────────────────
-//  🧱 Realistic Boundary Wall (With Gaps for BOTH Gates)
+//  Boundary Wall (With Gaps for BOTH Gates)
 // ─────────────────────────────────────────────────────────────
 const BoundaryWall3D = ({ center, isDark }) => {
   const wallHeight = 5.2; 
@@ -329,18 +412,13 @@ const BoundaryWall3D = ({ center, isDark }) => {
 
     const segs = [];
     for (let i = 0; i < pts.length - 1; i++) {
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const dx = p2.x - p1.x;
-      const dz = p2.z - p1.z;
+      const p1 = pts[i]; const p2 = pts[i + 1];
+      const dx = p2.x - p1.x; const dz = p2.z - p1.z;
       const len = Math.hypot(dx, dz);
-      const cx = (p1.x + p2.x) / 2;
-      const cz = (p1.z + p2.z) / 2;
+      const cx = (p1.x + p2.x) / 2; const cz = (p1.z + p2.z) / 2;
       const angle = Math.atan2(dz, dx);
-
-      const isOutGateGap = i === 18; // Coordinates for Out-Gate
-      const isInGateGap = i === 22;  // Coordinates for In-Gate
-
+      const isOutGateGap = i === 18;
+      const isInGateGap = i === 22; 
       segs.push({ cx, cz, len, angle, p1, p2, isInGateGap, isOutGateGap, index: i });
     }
     return segs;
@@ -350,43 +428,27 @@ const BoundaryWall3D = ({ center, isDark }) => {
     <group>
       {segments.map((seg, i) => {
         if (seg.isInGateGap || seg.isOutGateGap) return null;
-
         return (
           <group key={`wall-seg-${i}`} position={[seg.cx, 0, seg.cz]} rotation={[0, -seg.angle, 0]}>
-            <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
-              <boxGeometry args={[seg.len, 0.8, wallThickness + 0.2]} />
-              <meshStandardMaterial color={foundationColor} roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.8 + (wallHeight - 0.8) / 2, 0]} castShadow receiveShadow>
-              <boxGeometry args={[seg.len, wallHeight - 0.8, wallThickness]} />
-              <meshStandardMaterial color={skinColor} roughness={0.8} />
-            </mesh>
-            <mesh position={[0, wallHeight + 0.1, 0]} castShadow receiveShadow>
-              <boxGeometry args={[seg.len + 0.1, 0.2, wallThickness + 0.3]} />
-              <meshStandardMaterial color={trimColor} roughness={0.7} />
-            </mesh>
+            <mesh position={[0, 0.4, 0]} castShadow receiveShadow><boxGeometry args={[seg.len, 0.8, wallThickness + 0.2]} /><meshStandardMaterial color={foundationColor} roughness={0.9} /></mesh>
+            <mesh position={[0, 0.8 + (wallHeight - 0.8) / 2, 0]} castShadow receiveShadow><boxGeometry args={[seg.len, wallHeight - 0.8, wallThickness]} /><meshStandardMaterial color={skinColor} roughness={0.8} /></mesh>
+            <mesh position={[0, wallHeight + 0.1, 0]} castShadow receiveShadow><boxGeometry args={[seg.len + 0.1, 0.2, wallThickness + 0.3]} /><meshStandardMaterial color={trimColor} roughness={0.7} /></mesh>
           </group>
         );
       })}
-
       {segments.map((seg, i) => (
         <group key={`wall-pillar-${i}`} position={[seg.p1.x, 0, seg.p1.z]}>
-          <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[wallThickness + 0.6, wallHeight + 0.4, wallThickness + 0.6]} />
-            <meshStandardMaterial color={pillarColor} roughness={0.8} />
-          </mesh>
-          <mesh position={[0, wallHeight + 0.4 + 0.15, 0]} castShadow>
-             <cylinderGeometry args={[0, wallThickness + 0.5, 0.3, 4]} rotation={[0, Math.PI/4, 0]}/>
-             <meshStandardMaterial color={trimColor} />
-          </mesh>
+          <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow><boxGeometry args={[wallThickness + 0.6, wallHeight + 0.4, wallThickness + 0.6]} /><meshStandardMaterial color={pillarColor} roughness={0.8} /></mesh>
+          <mesh position={[0, wallHeight + 0.4 + 0.15, 0]} castShadow><cylinderGeometry args={[0, wallThickness + 0.5, 0.3, 4]} rotation={[0, Math.PI/4, 0]}/><meshStandardMaterial color={trimColor} /></mesh>
         </group>
       ))}
     </group>
   );
 };
 
+
 // ─────────────────────────────────────────────────────────────
-//  🚧 In-Gate Plaza Component (4 Lanes)
+//  In-Gate Plaza Component
 // ─────────────────────────────────────────────────────────────
 const InGate3D = ({ center, isDark }) => {
   const [hovered, setHovered] = useState(false);
@@ -490,8 +552,9 @@ const InGate3D = ({ center, isDark }) => {
   );
 };
 
+
 // ─────────────────────────────────────────────────────────────
-//  🚧 Out-Gate Plaza Component (1 Lane + Railings)
+//  Out-Gate Plaza Component
 // ─────────────────────────────────────────────────────────────
 const OutGate3D = ({ center, isDark }) => {
   const [hovered, setHovered] = useState(false);
@@ -616,7 +679,7 @@ const OutGate3D = ({ center, isDark }) => {
 
 
 // ─────────────────────────────────────────────────────────────
-//  📦 Container geometries (shared)
+//  📦 Container & Static Components
 // ─────────────────────────────────────────────────────────────
 const geo40ft = new THREE.BoxGeometry(12.2, 2.6, 2.4);
 const geo20ft = new THREE.BoxGeometry(6.1, 2.6, 2.4);
@@ -956,6 +1019,10 @@ const Slot3D = ({ slot, center, isDark, onClick }) => {
   );
 };
 
+
+// ─────────────────────────────────────────────────────────────
+//  MAIN APP COMPONENT
+// ─────────────────────────────────────────────────────────────
 function App() {
   const [slots, setSlots] = useState([]);
   const [containers, setContainers] = useState([]);
@@ -1117,7 +1184,7 @@ function App() {
           </div>
         )}
 
-        {/* Updated Legend with Parking */}
+        {/* Updated Legend with All Additions */}
         <div className="ui-legend" style={{ background: isDark ? "rgba(30,41,59,0.8)" : "rgba(255,255,255,0.8)", padding: "15px", borderRadius: "8px", position: "absolute", bottom: "20px", left: "20px" }}>
           <h4 style={{ margin: "0 0 10px 0" }}>Map Legend</h4>
           <div className="legend-row" style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}><div style={{ width: "15px", height: "15px", background: "#38BDF8", marginRight: "10px" }}></div><span>Head Office</span></div>
@@ -1125,6 +1192,7 @@ function App() {
           <div className="legend-row" style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}><div style={{ width: "15px", height: "15px", background: "#E6C280", marginRight: "10px" }}></div><span>Boundary Wall</span></div>
           <div className="legend-row" style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}><div style={{ width: "15px", height: "15px", background: isDark ? "#94A3B8" : "#E2E8F0", border: "1px solid #94A3B8", marginRight: "10px" }}></div><span>Warehouse</span></div>
           <div className="legend-row" style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}><div style={{ width: "15px", height: "15px", background: "#71717A", border: "2px dashed #FACC15", marginRight: "10px" }}></div><span>Parking Area</span></div>
+          <div className="legend-row" style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}><div style={{ width: "15px", height: "15px", background: "#EA580C", marginRight: "10px" }}></div><span>RST Reach Stacker</span></div>
         </div>
       </div>
 
@@ -1145,18 +1213,16 @@ function App() {
 
         <MapControls enableDamping={true} dampingFactor={0.05} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={20} maxDistance={1500} />
 
-        {/* Boundary Wall */}
+        {/* Existing Infrastructure */}
         <BoundaryWall3D center={center} isDark={isDark} />
-
-        {/* Head Office */}
         <HeadOffice3D center={center} isDark={isDark} />
-
-        {/* Terminal Gates */}
         <InGate3D center={center} isDark={isDark} />
         <OutGate3D center={center} isDark={isDark} />
-
-        {/* NEW: Car Parking Area */}
         <ParkingArea3D center={center} isDark={isDark} />
+        
+        {/* Restored Path & Canteen */}
+        <PathArea3D center={center} />
+        <Canteen3D center={center} isDark={isDark} />
 
         {/* Slots */}
         {slots.map((slot, idx) => (
@@ -1186,10 +1252,16 @@ function App() {
           });
         }, [center, isDark])}
 
-        {/* Cranes */}
+        {/* RTG Cranes */}
         {CRANE_COORDS.map((crane, idx) => (
           <Crane3D key={`crane-${idx}`} lat={crane.lat} lng={crane.lng} type={crane.type} center={center} isDark={isDark} />
         ))}
+
+        {/* NEW: RST Reach Stackers */}
+        {RST_MACHINES.map((rst, idx) => (
+          <ReachStacker3D key={`rst-${idx}`} lat={rst.lat} lng={rst.lng} angle={rst.angle} center={center} isDark={isDark} />
+        ))}
+
       </Canvas>
     </div>
   );
