@@ -5,6 +5,9 @@ import { MapControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import "./App.css";
 
+
+
+
 const LAT_TO_METERS = 111320;
 const API_POLL_INTERVAL = 5000;
 
@@ -42,12 +45,52 @@ const CRANE_COORDS = [
 
 // --- NEW: Reach Stacker (RST) Coordinates ---
 const RST_MACHINES = [
-  { lat: 28.513710971678258, lng:  77.2871341926275, angle: Math.PI / 1 },
-  { lat: 28.50950981669418, lng: 77.28775043401356, angle: -Math.PI / 3 },
-   { lat: 28.509407382748716, lng: 77.28917767667743, angle: -Math.PI / 9 }, 
-    { lat:   28.51173323962677, lng:  77.29054777363444, angle: -Math.PI / 5},
-    { lat: 28.51309880145435, lng:  77.28823378159592, angle: -Math.PI / 9 }, 
+  { lat: 28.513710971678258, lng: 77.2871341926275, angle: Math.PI / 1 },
+  { lat: 28.50950981669418, lng: 77.28775043401356, angle: -Math.PI / 9 },
+  { lat: 28.509407382748716, lng: 77.28917767667743, angle: -Math.PI / 1 },
+  { lat: 28.51173323962677, lng: 77.29054777363444, angle: -Math.PI / 5 },
+  { lat: 28.51309880145435, lng: 77.28823378159592, angle: -Math.PI / 9 },
+  { lat: 28.508881162704135, lng: 77.28649336396111, angle: -Math.PI / 30 },
+  { lat: 28.50865788975487, lng: 77.28905220546747, angle: -Math.PI / 17 },
+  { lat: 28.509442272100923, lng: 77.28984252037615, angle: -Math.PI / 17 },
+  { lat: 28.508694913735585, lng: 77.29079854236463, angle: -Math.PI / 17 },
+  { lat: 28.512022043629514, lng: 77.28973821348758, angle: -Math.PI / 5 }
 ];
+
+
+const ROAD_SEGMENTS = [
+  [
+    [28.508774017771152, 77.2886683489405],
+    [28.508657821342336, 77.28867316982749]
+  ],
+  [
+    [28.5086390604457, 77.28833364164127],
+    [28.508548887071168, 77.28839080358703]
+  ],
+  [
+    [28.508434505966758, 77.28798929256652],
+    [28.508327387043792, 77.28802992575689]
+  ],
+  [
+    [28.508327992233706, 77.28772414377447],
+    [28.508226925128213, 77.28773171945396]
+  ],
+  [
+    [28.508303784550492, 77.28704784216228],
+    [28.508193034338454, 77.28709811712663]
+  ],
+  [
+    [28.508160353925316, 77.28690183815456],
+    [28.508156722767712, 77.28704508736807]
+  ],
+  [
+    [28.507407757004515, 77.28695005103073],
+    [28.507405941412763, 77.28705404445014]
+  ]
+];
+
+
+
 
 
 // ─────────────────────────────────────────────────────────────
@@ -101,9 +144,9 @@ function createWarningStripeTexture() {
   canvas.width = 512; canvas.height = 512;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "#FACC15"; 
+  ctx.fillStyle = "#FACC15";
   ctx.fillRect(0, 0, 512, 512);
-  ctx.fillStyle = "#111827"; 
+  ctx.fillStyle = "#111827";
   ctx.beginPath();
   for (let i = -512; i < 1024; i += 128) {
     ctx.moveTo(i, 0); ctx.lineTo(i + 64, 0); ctx.lineTo(i + 64 - 512, 512); ctx.lineTo(i - 512, 512);
@@ -200,8 +243,8 @@ const ReachStacker3D = ({ lat, lng, angle, center, isDark }) => {
 
       {/* 4. Hydraulic Arm Base */}
       <mesh position={[0, 2.5, -3.5]} castShadow>
-         <boxGeometry args={[1.5, 1.5, 2]} />
-         <meshStandardMaterial color={metalColor} />
+        <boxGeometry args={[1.5, 1.5, 2]} />
+        <meshStandardMaterial color={metalColor} />
       </mesh>
 
       {/* 5. Telescopic Orange Boom Arm */}
@@ -266,11 +309,11 @@ const Canteen3D = ({ center }) => {
     const s = new THREE.Shape();
     const lngScale = Math.cos((center.lat * Math.PI) / 180);
     const pts = CANTEEN_COORDS.map(([lat, lng]) => [
-        (lng - center.lng) * LAT_TO_METERS * lngScale,
-        -(lat - center.lat) * LAT_TO_METERS
+      (lng - center.lng) * LAT_TO_METERS * lngScale,
+      -(lat - center.lat) * LAT_TO_METERS
     ]);
     pts.forEach(([x, z], i) => {
-        if(i === 0) s.moveTo(x, z); else s.lineTo(x, z);
+      if (i === 0) s.moveTo(x, z); else s.lineTo(x, z);
     });
     return { shape: s, points: pts };
   }, [center]);
@@ -291,7 +334,7 @@ const Canteen3D = ({ center }) => {
       </mesh>
       {/* Label */}
       <Html position={[points[0][0], 6, points[0][1]]} center>
-         <div style={{ background: "#FACC15", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>Canteen Area</div>
+        <div style={{ background: "#FACC15", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold", whiteSpace: "nowrap" }}>Canteen Area</div>
       </Html>
     </group>
   );
@@ -335,10 +378,10 @@ const ParkingArea3D = ({ center, isDark }) => {
       const angle = Math.atan2(dz, dx);
       const numBarriers = Math.floor(dist / barrierLength);
 
-      for(let b=0; b < numBarriers; b++) {
-         const bx = p1[0] + (dx/dist) * (b * barrierLength + barrierLength/2);
-         const bz = p1[1] + (dz/dist) * (b * barrierLength + barrierLength/2);
-         bItems.push({ x: bx, z: bz, angle });
+      for (let b = 0; b < numBarriers; b++) {
+        const bx = p1[0] + (dx / dist) * (b * barrierLength + barrierLength / 2);
+        const bz = p1[1] + (dz / dist) * (b * barrierLength + barrierLength / 2);
+        bItems.push({ x: bx, z: bz, angle });
       }
     }
 
@@ -348,11 +391,11 @@ const ParkingArea3D = ({ center, isDark }) => {
 
     for (let x = minX; x < maxX; x += spotWidth) {
       for (let z = minZ; z < maxZ; z += spotLength * 1.5) {
-         const spotCx = x + spotWidth/2;
-         const spotCz = z + spotLength/2;
-         if(isPointInPolygon([spotCx, spotCz], pts)) {
-            pLines.push({ x: spotCx, z: spotCz });
-         }
+        const spotCx = x + spotWidth / 2;
+        const spotCz = z + spotLength / 2;
+        if (isPointInPolygon([spotCx, spotCz], pts)) {
+          pLines.push({ x: spotCx, z: spotCz });
+        }
       }
     }
 
@@ -376,12 +419,12 @@ const ParkingArea3D = ({ center, isDark }) => {
       ))}
       {barriers.map((b, i) => (
         <mesh key={`barrier-${i}`} position={[b.x, 0.5, b.z]} rotation={[0, -b.angle, 0]} castShadow receiveShadow>
-           <boxGeometry args={[1.7, 1, 0.6]} />
-           <meshStandardMaterial map={stripeTexture} roughness={0.8} />
+          <boxGeometry args={[1.7, 1, 0.6]} />
+          <meshStandardMaterial map={stripeTexture} roughness={0.8} />
         </mesh>
       ))}
       {hovered && (
-        <Html position={[bounds.minX + (bounds.maxX - bounds.minX)/2, 5, bounds.minZ + (bounds.maxZ - bounds.minZ)/2]} center style={{ pointerEvents: "none" }}>
+        <Html position={[bounds.minX + (bounds.maxX - bounds.minX) / 2, 5, bounds.minZ + (bounds.maxZ - bounds.minZ) / 2]} center style={{ pointerEvents: "none" }}>
           <div className={`tooltip-3d ${isDark ? "dark" : "light"}`} style={{ fontWeight: "bold", fontSize: "14px", background: "#FACC15", color: "#111827", border: "2px solid #111827", padding: "6px 12px", borderRadius: "4px", boxShadow: "0 4px 6px rgba(0,0,0,0.3)" }}>
             Vehicle Parking Area
           </div>
@@ -396,11 +439,11 @@ const ParkingArea3D = ({ center, isDark }) => {
 //  Boundary Wall (With Gaps for BOTH Gates)
 // ─────────────────────────────────────────────────────────────
 const BoundaryWall3D = ({ center, isDark }) => {
-  const wallHeight = 5.2; 
+  const wallHeight = 5.2;
   const wallThickness = 0.6;
-  const skinColor = "#E6C280"; 
-  const foundationColor = isDark ? "#374151" : "#9CA3AF"; 
-  const trimColor = isDark ? "#1F2937" : "#4B5563"; 
+  const skinColor = "#E6C280";
+  const foundationColor = isDark ? "#374151" : "#9CA3AF";
+  const trimColor = isDark ? "#1F2937" : "#4B5563";
   const pillarColor = isDark ? "#4B5563" : "#6B7280";
 
   const segments = useMemo(() => {
@@ -418,7 +461,7 @@ const BoundaryWall3D = ({ center, isDark }) => {
       const cx = (p1.x + p2.x) / 2; const cz = (p1.z + p2.z) / 2;
       const angle = Math.atan2(dz, dx);
       const isOutGateGap = i === 18;
-      const isInGateGap = i === 22; 
+      const isInGateGap = i === 22;
       segs.push({ cx, cz, len, angle, p1, p2, isInGateGap, isOutGateGap, index: i });
     }
     return segs;
@@ -439,7 +482,7 @@ const BoundaryWall3D = ({ center, isDark }) => {
       {segments.map((seg, i) => (
         <group key={`wall-pillar-${i}`} position={[seg.p1.x, 0, seg.p1.z]}>
           <mesh position={[0, wallHeight / 2, 0]} castShadow receiveShadow><boxGeometry args={[wallThickness + 0.6, wallHeight + 0.4, wallThickness + 0.6]} /><meshStandardMaterial color={pillarColor} roughness={0.8} /></mesh>
-          <mesh position={[0, wallHeight + 0.4 + 0.15, 0]} castShadow><cylinderGeometry args={[0, wallThickness + 0.5, 0.3, 4]} rotation={[0, Math.PI/4, 0]}/><meshStandardMaterial color={trimColor} /></mesh>
+          <mesh position={[0, wallHeight + 0.4 + 0.15, 0]} castShadow><cylinderGeometry args={[0, wallThickness + 0.5, 0.3, 4]} rotation={[0, Math.PI / 4, 0]} /><meshStandardMaterial color={trimColor} /></mesh>
         </group>
       ))}
     </group>
@@ -476,7 +519,7 @@ const InGate3D = ({ center, isDark }) => {
     return { cx: centerX, cz: centerZ, angle: localAngle, width: maxDist, depth: 8 };
   }, [center]);
 
-  const roofColor = "#065F46"; const roofAccent = "#047857"; const skinColor = "#F5D0A9"; 
+  const roofColor = "#065F46"; const roofAccent = "#047857"; const skinColor = "#F5D0A9";
   const islandColor = isDark ? "#4B5563" : "#D1D5DB"; const glassColor = "#38BDF8";
   const metalColor = isDark ? "#374151" : "#64748B"; const yellowWarning = "#FACC15";
 
@@ -524,7 +567,7 @@ const InGate3D = ({ center, isDark }) => {
               </group>
 
               {i < numLanes && (
-                <group position={[1.4, 0.9, 2]}> 
+                <group position={[1.4, 0.9, 2]}>
                   <mesh castShadow><boxGeometry args={[0.5, 1.2, 0.6]} /><meshStandardMaterial color={yellowWarning} metalness={0.4} roughness={0.6} /></mesh>
                   <mesh position={[0, -0.5, 0]} castShadow><boxGeometry args={[0.7, 0.2, 0.8]} /><meshStandardMaterial color={metalColor} /></mesh>
                   <group position={[0.2, 0.4, 0]}><BarrierArm /></group>
@@ -582,27 +625,27 @@ const OutGate3D = ({ center, isDark }) => {
     return { cx: centerX, cz: centerZ, angle: localAngle, width: maxDist, depth: 6 };
   }, [center]);
 
-  const roofColor = "#065F46"; const roofAccent = "#047857"; const skinColor = "#F5D0A9"; 
+  const roofColor = "#065F46"; const roofAccent = "#047857"; const skinColor = "#F5D0A9";
   const islandColor = isDark ? "#4B5563" : "#D1D5DB"; const glassColor = "#38BDF8";
   const metalColor = isDark ? "#374151" : "#64748B"; const yellowWarning = "#FACC15";
 
-  const roofHeight = 5.5; 
-  const numLanes = 1; 
-  const numBooths = 2; 
+  const roofHeight = 5.5;
+  const numLanes = 1;
+  const numBooths = 2;
   const laneSpacing = width / numLanes;
 
   const Railing = ({ length }) => (
     <group position={[0, 0, 0]}>
       <mesh position={[0, 0.7, 0]} castShadow><boxGeometry args={[0.1, 0.05, length]} /><meshStandardMaterial color={metalColor} metalness={0.8} /></mesh>
       <mesh position={[0, 0.35, 0]} castShadow><boxGeometry args={[0.1, 0.05, length]} /><meshStandardMaterial color={metalColor} metalness={0.8} /></mesh>
-      {[-length/2.5, 0, length/2.5].map(z => (
+      {[-length / 2.5, 0, length / 2.5].map(z => (
         <mesh key={z} position={[0, 0.45, z]} castShadow><cylinderGeometry args={[0.04, 0.04, 0.9, 6]} /><meshStandardMaterial color={metalColor} metalness={0.8} /></mesh>
       ))}
     </group>
   );
 
   const BarrierArm = () => {
-    const armLength = laneSpacing - 2.8; 
+    const armLength = laneSpacing - 2.8;
     const segments = 8; const segLength = armLength / segments;
     return (
       <group rotation={[0, 0, 0]}>
@@ -648,7 +691,7 @@ const OutGate3D = ({ center, isDark }) => {
               )}
 
               {i === 0 && (
-                <group position={[1.4, 0.9, 2]}> 
+                <group position={[1.4, 0.9, 2]}>
                   <mesh castShadow><boxGeometry args={[0.5, 1.2, 0.6]} /><meshStandardMaterial color={yellowWarning} metalness={0.4} roughness={0.6} /></mesh>
                   <mesh position={[0, -0.5, 0]} castShadow><boxGeometry args={[0.7, 0.2, 0.8]} /><meshStandardMaterial color={metalColor} /></mesh>
                   <group position={[0.2, 0.4, 0]}><BarrierArm /></group>
@@ -1044,21 +1087,21 @@ function App() {
 
         const mappedContainers = Array.isArray(containersDataArray)
           ? containersDataArray
-              .filter((item) => item.STK_ID && item.ROW_NO !== undefined && item.COLUMN_NO !== undefined)
-              .map((item) => {
-                const heightChar = item.HEIGHT ? item.HEIGHT.toUpperCase() : "A";
-                const stackLvl = heightChar.charCodeAt(0) - 64; 
-                const rawSlotKey = `${String(item.STK_ID).trim()}:${String(item.ROW_NO).padStart(3, "0")}:${String(item.COLUMN_NO).padStart(3, "0")}`;
+            .filter((item) => item.STK_ID && item.ROW_NO !== undefined && item.COLUMN_NO !== undefined)
+            .map((item) => {
+              const heightChar = item.HEIGHT ? item.HEIGHT.toUpperCase() : "A";
+              const stackLvl = heightChar.charCodeAt(0) - 64;
+              const rawSlotKey = `${String(item.STK_ID).trim()}:${String(item.ROW_NO).padStart(3, "0")}:${String(item.COLUMN_NO).padStart(3, "0")}`;
 
-                return {
-                  id: item['20"CTR_NO'] || item.ID || "UNKNOWN",
-                  size: String(item.CTR_SIZE || "20"),
-                  loc: rawSlotKey,
-                  stack: stackLvl,
-                  originalData: item,
-                  _rawKey: rawSlotKey,
-                };
-              })
+              return {
+                id: item['20"CTR_NO'] || item.ID || "UNKNOWN",
+                size: String(item.CTR_SIZE || "20"),
+                loc: rawSlotKey,
+                stack: stackLvl,
+                originalData: item,
+                _rawKey: rawSlotKey,
+              };
+            })
           : [];
 
         setContainers(mappedContainers);
@@ -1143,7 +1186,11 @@ function App() {
       <div className="ui-overlay">
         <div className="ui-header">
           <h1>Logistics 3D Yard</h1>
-          <p className="subtitle">
+              <p
+            className="subtitle"
+            onClick={() => setShowInterior(true)}
+            style={{ cursor: "pointer" }}
+          >
             {slots.length} Yard Slots | {containers.length} Containers | {WAREHOUSE_DATA.length} Warehouses
           </p>
           <div style={{ fontSize: "12px", marginTop: "5px", display: "flex", alignItems: "center", gap: "5px" }}>
@@ -1219,7 +1266,7 @@ function App() {
         <InGate3D center={center} isDark={isDark} />
         <OutGate3D center={center} isDark={isDark} />
         <ParkingArea3D center={center} isDark={isDark} />
-        
+
         {/* Restored Path & Canteen */}
         <PathArea3D center={center} />
         <Canteen3D center={center} isDark={isDark} />
